@@ -1,58 +1,73 @@
-<p align="center">
-    <img src="https://img.022335.xyz/logo.png" width="96px" />
-    <h1 align="center">StableEra</h1>
-    <p align="center"><strong>一个沉浸式瀑布流相册应用🎉</strong></p>
-    <p align="center"><a href="README.md">English</a> | <a href="README_ZH.md">简体中文</a></p>
-</p>
+<div align="center">
 
+<img src="public/logo.png" width="100px" />
 
-## 前言
+# StableEra
 
-StableEra 是一个基于Next.js构建的沉浸式瀑布流相册，主要用于个人私有存储照片，支持本地和S3等方式聚合存储，可部署到Docker和Vercel
+**恒纪元里，珍藏每一帧光影。**
 
-## 项目展示
+一个自托管的私人相册，为珍视秩序与永恒的人而生。
 
-- [在线演示](https://022335.xyz)
-- [部署教程](https://doc.022335.xyz)
+[English](README.md) | [简体中文](README_ZH.md)
 
-![](https://img.022335.xyz/demo.jpg)
-![](https://img.022335.xyz/demo1.jpg)
+</div>
 
+---
 
-## 功能介绍
+## 关于
 
-- **🖼️ 瀑布流列表**：瀑布流无限滚动，采用游标分页+虚拟滚动优化性能
+"恒纪元"——出自《三体》中文明繁荣、岁月静好的时期。StableEra 正是这样一个空间：在乱纪元的喧嚣之外，为你守护那些值得留存的瞬间。它以瀑布流的方式呈现照片，解析 EXIF 信息还原时间线，支持本地与云端双重存储。
 
-- **🌄 缩略图优化**：生成缩略图和高清图，优化在弱网环境下的体验
+无论部署在家里的服务器还是云平台上，StableEra 始终让你的照片保持私有、由你掌控。
 
-- **📷 EXIF解析**：解析记录照片EXIF信息，按时间线排列照片
+## 截图预览
 
-- **💻 响应式设计**：响应式布局自动适配PC和大部分手机端浏览器
+> 截图即将补充。
 
-- **☁️ 聚合存储**：支持本地文件和S3协议对象存储，聚合式存储图片
+## 功能特性
 
-- **👥 多用户**：支持添加不同用户，提供多用户使用支持与管理
-
+- **瀑布流布局** — 游标分页 + 虚拟滚动，海量照片也能流畅浏览。
+- **智能缩略图** — 自动生成缩略图与高清预览，弱网体验同样出色。
+- **EXIF 解析** — 提取相机、镜头、GPS、时间等元数据，按时间线编排照片。
+- **响应式适配** — 从桌面到手机，布局自动调整。
+- **聚合存储** — 本地文件、Cloudflare R2、Backblaze B2、MinIO 等 S3 兼容存储任你选择。
+- **多用户管理** — 独立账户、独立相册空间，支持多人使用。
+- **验证码登录** — 登录页集成 SVG 验证码，防止自动化攻击。
 
 ## 技术栈
 
-- **全栈框架：** [Next.js](https://nextjs.org/)
+| 层级 | 技术 |
+|------|------|
+| 全栈框架 | [Next.js](https://nextjs.org/) |
+| API 层 | [Hono](https://hono.dev/) |
+| ORM | [Drizzle](https://orm.drizzle.team/) |
+| 数据库 | [SQLite](https://sqlite.org/) / [Turso](https://turso.tech/) |
+| UI 组件 | [shadcn/ui](https://ui.shadcn.com/) |
+| 存储 | 本地 / S3 兼容 |
 
-- **Web框架：** [Hono](https://hono.dev/)
+## 快速开始
 
-- **ORM：** [Drizzle](https://orm.drizzle.team/)
+```bash
+# 安装依赖
+pnpm install
 
-- **数据库：** [SQLite](https://sqlite.org/)
+# 复制并编辑环境变量
+cp .env.example .env
 
-- **UI组件：** [shadcn/ui](https://ui.shadcn.com/)
+# 启动开发服务器
+pnpm run dev
+```
 
-## 友情社区
-[LINUXDO](https://linux.do)
+访问 `http://localhost:3000`，使用 `.env` 中设置的账号密码登录。
 
-## 许可证
+## 部署
 
-`StableEra` 是基于 [AGPL-3.0](LICENSE) 许可证的开源软件
+StableEra 支持部署到 Vercel、Docker 或任何兼容 Node.js 的环境。所有配置项详见 [`.env.example`](.env.example)。
 
+## 致谢
 
+本项目基于 [@aslost](https://github.com/aslost) 的 [Pixtale](https://github.com/aslost/pixtale.git) 项目进行二次开发，感谢原作者提供的优秀基础。
 
+## 开源协议
 
+StableEra 沿用上游项目的 [AGPL-3.0](LICENSE) 开源协议，所有修改与分发均遵守 AGPL-3.0 条款。
