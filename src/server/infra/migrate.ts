@@ -33,6 +33,7 @@ const createTableSqlList = [
         album_id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT NOT NULL DEFAULT '',
+        visibility INTEGER NOT NULL DEFAULT 0,
         sort INTEGER NOT NULL DEFAULT 0,
         create_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
         update_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
@@ -127,6 +128,7 @@ async function migrate(): Promise<void> {
 
   if (process.env.TURSO_DATABASE_URL) {
     await turso!.batch(createTableSqlList.map((sql) => ({ sql })), 'write')
+    await migrateAlterColumns()
     return
   }
 
@@ -136,6 +138,29 @@ async function migrate(): Promise<void> {
     }
   })
   runBatch()
+  await migrateAlterColumns()
+}
+
+// 增量迁移：为已存在的表补充新增列，已存在的列会自动跳过。
+async function migrateAlterColumns(): Promise<void> {
+  // album 表 visibility 列：0 公开 / 1 私密，旧表缺失时补齐。
+  const useTurso = Boolean(process.env.TURSO_DATABASE_URL)
+
+  if (useTurso) {
+    const result = await turso!.execute(`PRAGMA table_info(album)`)
+    const albumColumns = (result.rows ?? []).map((row) => String(row.name))
+
+    if (!albumColumns.includes('visibility')) {
+      await turso!.execute(`ALTER TABLE album ADD COLUMN visibility INTEGER NOT NULL DEFAULT 0`)
+    }
+    return
+  }
+
+  const albumColumns = db!.prepare(`PRAGMA table_info(album)`).all() as { name: string }[]
+
+  if (!albumColumns.some((col) => col.name === 'visibility')) {
+    db!.exec(`ALTER TABLE album ADD COLUMN visibility INTEGER NOT NULL DEFAULT 0`)
+  }
 }
 
 export { migrate };

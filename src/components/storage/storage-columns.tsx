@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { StorageTypeEnum } from "@/server/enums/storage-enum"
 import { type StorageVo } from "@/server/entity/vo/storage"
 import { useTranslations } from "next-intl"
@@ -153,11 +154,16 @@ export function useStorageColumns({ onEdit, onSetTop, onToggleStatus, onDelete }
       },
       cell: ({ row }) => (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Open actions menu">
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" aria-label={t("actions.more")}>
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{t("actions.more")}</TooltipContent>
+          </Tooltip>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => onEdit(row.original)}>{t("edit")}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onToggleStatus(row.original.storageId)}>

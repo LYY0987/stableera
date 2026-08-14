@@ -10,6 +10,7 @@ import {
 
 import { useApp } from "@/app/(main)/provider"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useImagePreload } from "@/hooks/use-image-preload"
 import { PhotoCard } from "@/components/photo/photo-card"
 import { PhotoSelectionDrawer } from "@/components/photo/photo-selection-drawer"
 import { type PhotoVo } from "@/server/entity/vo/photo"
@@ -88,6 +89,12 @@ const PhotoMasonry = memo(function PhotoMasonry({
   const { sidebarOpen } = useApp()
   // isMobile 判断当前是否为移动端视口。
   const isMobile = useIsMobile()
+  // 预加载 hook
+  const { shouldPreload, preloadImages } = useImagePreload({
+    threshold: 2000,
+    enableCache: true,
+    preloadCount: 5,
+  })
   // wrapRef 用于监听瀑布流外层真实可视宽度。
   const wrapRef = useRef<HTMLDivElement | null>(null)
   // onReachBottomRef 用于保存最新的触底回调。
@@ -240,6 +247,25 @@ const PhotoMasonry = memo(function PhotoMasonry({
 
       if (bottomDistance <= threshold) {
         onReachBottomRef.current()
+      }
+
+      // 智能预加载：当用户接近底部时预加载下一批照片
+      if (shouldPreload() && photos.length > 0) {
+        // 获取可见范围之外的照片（用于预加载）
+        const scrollTop = window.scrollY
+        const viewportHeight = window.innerHeight
+        const nextPhotoIndex = Math.ceil((scrollTop + viewportHeight) / 200) // 估算位置
+        const preloadStart = Math.min(nextPhotoIndex, photos.length)
+        const preloadPhotos = photos.slice(preloadStart, preloadStart + 10).map(photo => ({
+          photoId: photo.photoId,
+          url: photo.thumbnail || null,
+        }))
+
+        if (preloadPhotos.length > 0) {
+          preloadImages(preloadPhotos).catch(() => {
+            // 预加载失败，继续正常流程
+          })
+        }
       }
     }
 

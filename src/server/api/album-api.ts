@@ -3,7 +3,7 @@ import { Context } from 'hono';
 import result from '@/server/model/result';
 import { getUserId } from '@/server/security/context';
 import { albumService } from '@/server/service/album-service';
-import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo } from '@/server/entity/bo/album';
+import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo } from '@/server/entity/bo/album';
 
 // 这个模块注册相册相关接口。
 
@@ -51,6 +51,13 @@ app.post('/album/setName', async (c: Context) => {
 app.post('/album/setTop', async (c: Context) => {
   const body = await c.req.json<AlbumSetTopBo>();
   await albumService.setTop(body, getUserId());
+  return c.json(result.ok());
+});
+
+// 设置当前用户指定相册的可见性（公开/私密）。
+app.post('/album/setVisibility', async (c: Context) => {
+  const body = await c.req.json<AlbumSetVisibilityBo>();
+  await albumService.setVisibility(body, getUserId());
   return c.json(result.ok());
 });
 

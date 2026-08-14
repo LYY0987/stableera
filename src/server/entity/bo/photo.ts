@@ -17,6 +17,7 @@ interface PhotoListBo {
   favorite?: number | null;
   status?: number | null;
   albumId?: string | null;
+  keyword?: string | null;
 
 }
 

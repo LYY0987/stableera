@@ -2,8 +2,10 @@
 
 import { useEffect } from "react"
 import { CheckCheck, FolderMinusIcon, FolderPlusIcon, RotateCcwIcon, Trash2Icon, XIcon } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface PhotoSelectionDrawerProps {
   open: boolean
@@ -17,6 +19,8 @@ interface PhotoSelectionDrawerProps {
 
 // 渲染照片多选状态下的顶部操作抽屉。
 export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onRestore, onAlbumOpen, onAlbumRemove }: PhotoSelectionDrawerProps) {
+  const t = useTranslations("photos.actions")
+
   useEffect(() => {
     if (!open) {
       return
@@ -55,9 +59,14 @@ export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onR
       ].join(" ")}
     >
       <div className="relative flex h-11.75 items-center justify-between px-4">
-        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Cancel selection">
-          <XIcon />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label={t("cancelSelection")}>
+              <XIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{t("cancelSelection")}</TooltipContent>
+        </Tooltip>
         <div />
         <div
           className={[
@@ -67,26 +76,51 @@ export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onR
               : "left-[calc(100vw-7rem)] md:left-[calc(100vw-7.5rem)]",
           ].join(" ")}
         >
-          <Button size="icon" variant="ghost" onClick={onSelectAll} aria-label="Select all photos">
-            <CheckCheck />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" onClick={onSelectAll} aria-label={t("selectFirst")}>
+                <CheckCheck />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t("selectFirst")}</TooltipContent>
+          </Tooltip>
           {onRestore && (
-            <Button size="icon" variant="ghost" onClick={onRestore} aria-label="Restore photos">
-              <RotateCcwIcon />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" onClick={onRestore} aria-label={t("restore")}>
+                  <RotateCcwIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("restore")}</TooltipContent>
+            </Tooltip>
           )}
-          <Button size="icon" variant="ghost" onClick={onDelete} aria-label="Delete photos">
-            <Trash2Icon />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" onClick={onDelete} aria-label={t("delete")}>
+                <Trash2Icon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t("delete")}</TooltipContent>
+          </Tooltip>
           {onAlbumOpen && (
-            <Button size="icon" variant="ghost" onClick={openAlbumDialog} aria-label="Add to album">
-              <FolderPlusIcon />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" onClick={openAlbumDialog} aria-label={t("addToAlbum")}>
+                  <FolderPlusIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("addToAlbum")}</TooltipContent>
+            </Tooltip>
           )}
           {onAlbumRemove && (
-            <Button size="icon" variant="ghost" onClick={removeAlbumPhotos} aria-label="Remove from album">
-              <FolderMinusIcon />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" onClick={removeAlbumPhotos} aria-label={t("removeFromAlbum")}>
+                  <FolderMinusIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("removeFromAlbum")}</TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>

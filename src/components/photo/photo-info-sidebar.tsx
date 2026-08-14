@@ -3,6 +3,7 @@
 import { XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTapAction } from "@/hooks/use-tap-action"
 import { formatPhotoTakenDateTime } from "@/lib/date"
 import { getThumbHashUrl } from "@/lib/thumb-hash"
@@ -115,19 +116,26 @@ export function PhotoViewerBlurBackground({ thumbHash }: PhotoViewerBlurBackgrou
 
 // 渲染侧栏关闭按钮（移动端 md 以下显示）。
 function SidebarCloseButton({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("photos.viewer.actions")
   const tap = useTapAction(onClose)
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className="absolute top-2 right-2 z-10 rounded-full bg-black/40 text-white hover:bg-black/50 md:hidden"
-      {...tap}
-    >
-      <XIcon />
-      <span className="sr-only">Close</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className="absolute top-2 right-2 z-10 rounded-full bg-black/40 text-white hover:bg-black/50 md:hidden"
+          aria-label={t("infoClose")}
+          {...tap}
+        >
+          <XIcon />
+          <span className="sr-only">{t("infoClose")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("infoClose")}</TooltipContent>
+    </Tooltip>
   )
 }
 

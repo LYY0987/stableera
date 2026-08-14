@@ -11,6 +11,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Slider } from "@/components/ui/slider"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { getLocalTzOffsetMin } from "@/lib/date"
 import { photoTakenDateList } from "@/request/photo"
 import { type PhotoTakenDateVo } from "@/server/entity/vo/photo"
@@ -120,15 +121,21 @@ function PhotoDateDrawer({ albumId, favorite, onRangeChange }: PhotoDateDrawerPr
 
   return (
     <Drawer direction="right" handleOnly open={open} onOpenChange={changeOpen}>
-      <DrawerTrigger asChild>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-        >
-          <Clock4 />
-        </Button>
-      </DrawerTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DrawerTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={t("selectDateRange")}
+            >
+              <Clock4 />
+            </Button>
+          </DrawerTrigger>
+        </TooltipTrigger>
+        <TooltipContent>{t("selectDateRange")}</TooltipContent>
+      </Tooltip>
       <DrawerContent
         className="h-dvh !w-38 md:!w-35 !rounded-none pr-9 md:pr-6 pb-8 pt-15 sm:max-w-none"
         onPointerDownOutside={saveRange}

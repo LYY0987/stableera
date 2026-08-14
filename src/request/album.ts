@@ -1,6 +1,6 @@
 import { http } from "@/request/request";
 import { type Album } from "@/server/entity/album";
-import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo } from "@/server/entity/bo/album";
+import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo } from "@/server/entity/bo/album";
 import { type AlbumVo } from "@/server/entity/vo/album";
 
 // 这个模块封装相册相关接口请求。
@@ -38,6 +38,11 @@ export function albumSetName(params: AlbumSetNameBo) {
 // 置顶相册。
 export function albumSetTop(params: AlbumSetTopBo) {
   return http.post<void>('/album/setTop', params);
+}
+
+// 设置相册可见性（公开/私密）。
+export function albumSetVisibility(params: AlbumSetVisibilityBo) {
+  return http.post<void>('/album/setVisibility', params);
 }
 
 // 查询回收站虚拟相册。

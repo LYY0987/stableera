@@ -1,16 +1,88 @@
 "use client"
 
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState, useEffect } from "react"
 import { useRouter, useServerInsertedHTML } from "next/navigation"
 import { useTheme, type Theme } from "@/app/provider"
 import { LoginForm } from "@/components/login/login-form"
 import { login } from "@/request/login"
 import { getCaptcha } from "@/request/captcha"
 import { type LoginBo } from "@/server/entity/bo/login"
-import { Camera, Sparkles, Shield, Images } from "lucide-react"
 import { useTranslations } from "next-intl"
+import ringImg from "@/assets/ring.png"
+import s2Img from "@/assets/s2.png"
+import s3Img from "@/assets/s3.png"
+import s4Img from "@/assets/s4.png"
+import s5Img from "@/assets/s5.png"
+import s6Img from "@/assets/s6.png"
+import s7Img from "@/assets/s7.png"
+import s8Img from "@/assets/s8.png"
 
-// 登录页：左侧品牌展示区 + 右侧表单区，提交登录后跳转主体页面。
+// 星空粒子组件：canvas 绘制随机星点，带闪烁和缓慢漂移动画。
+function Starfield() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    // stars 保存所有星点的位置、半径、透明度和闪烁速度。
+    type Star = { x: number; y: number; r: number; alpha: number; speed: number }
+    let stars: Star[] = []
+    let animationId: number
+
+    // 根据画布尺寸生成星点，密度随面积自适应。
+    function generateStars() {
+      const w = canvas!.width
+      const h = canvas!.height
+      const count = Math.floor((w * h) / 6000)
+      stars = Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.5 + 0.3,
+        alpha: Math.random(),
+        speed: Math.random() * 0.015 + 0.005,
+      }))
+    }
+
+    // 调整画布尺寸到窗口大小，并重新生成星点。
+    function resize() {
+      canvas!.width = window.innerWidth
+      canvas!.height = window.innerHeight
+      generateStars()
+    }
+
+    // 绘制一帧：清空画布后逐个绘制星点，更新透明度实现闪烁。
+    function draw() {
+      ctx.clearRect(0, 0, canvas!.width, canvas!.height)
+      for (const s of stars) {
+        s.alpha += s.speed
+        if (s.alpha > 1 || s.alpha < 0.1) {
+          s.speed = -s.speed
+        }
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(200, 220, 255, ${Math.max(0.1, Math.min(1, s.alpha))})`
+        ctx.fill()
+      }
+      animationId = requestAnimationFrame(draw)
+    }
+
+    resize()
+    draw()
+    window.addEventListener("resize", resize)
+
+    return () => {
+      cancelAnimationFrame(animationId)
+      window.removeEventListener("resize", resize)
+    }
+  }, [])
+
+  return <canvas ref={canvasRef} className="absolute inset-0 z-0 h-full w-full" />
+}
+
+// 登录页：居中悬浮卡片，左侧 Logo 圆环 + 右侧表单，星空背景 + 装饰图。
 export default function AuthPage() {
   const title = process.env.TITLE || "StableEra"
   const t = useTranslations("login")
@@ -24,7 +96,7 @@ export default function AuthPage() {
   useServerInsertedHTML(() => (
     <script
       dangerouslySetInnerHTML={{
-        __html: `(function(){var el=document.documentElement;el.classList.remove("dark");el.style.colorScheme="light";})();`,
+        __html: `(function(){var el=document.documentElement;el.classList.add("dark");el.style.colorScheme="dark";})();`,
       }}
     />
   ))
@@ -36,11 +108,11 @@ export default function AuthPage() {
     }
   }, [])
 
-  // 进入登录页强制浅色，离开时恢复原主题。
+  // 进入登录页强制深色星空主题，离开时恢复原主题。
   useLayoutEffect(() => {
     previousThemeRef.current = theme
-    document.documentElement.classList.remove("dark")
-    document.documentElement.style.colorScheme = "light"
+    document.documentElement.classList.add("dark")
+    document.documentElement.style.colorScheme = "dark"
 
     return () => {
       setTheme(previousThemeRef.current)
@@ -64,87 +136,129 @@ export default function AuthPage() {
       })
   }
 
+  // Logo 圆环组件：ring 顺时针 + 双层文字环绕 + 中心 logo。
+  function LogoRing({ size = 280 }: { size?: number }) {
+    return (
+      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+        {/* 最外层 ring.png 顺时针旋转 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={ringImg.src}
+          alt=""
+          className="absolute inset-0 h-full w-full object-contain animate-spin-clockwise opacity-60"
+          draggable={false}
+        />
+
+        {/* 外层 StableEra 文字环绕，逆时针旋转 */}
+        <svg
+          viewBox="0 0 240 240"
+          className="absolute inset-0 h-full w-full animate-spin-counterclockwise text-cyan-300/70"
+        >
+          <defs>
+            <path
+              id={`text-outer-${size}`}
+              d="M 120,120 m -100,0 a 100,100 0 1,1 200,0 a 100,100 0 1,1 -200,0"
+              fill="none"
+            />
+          </defs>
+          <text
+            fontSize="12"
+            fontWeight="500"
+            letterSpacing="5"
+            fill="currentColor"
+          >
+            <textPath href={`#text-outer-${size}`}>
+              {`StableEra · StableEra · StableEra · StableEra · StableEra · `}
+            </textPath>
+          </text>
+        </svg>
+
+        {/* 中心 logo 圆形显示 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo.png"
+          alt={title}
+          className="relative z-10 size-24 rounded-full object-cover shadow-2xl shadow-cyan-500/20 ring-2 ring-cyan-500/20"
+          draggable={false}
+        />
+      </div>
+    )
+  }
+
+  // 装饰图配置：src、位置、大小、动画延迟。
+  const decorations = [
+    { src: s2Img.src, className: "left-[2%] top-[6%] w-32 lg:w-44", delay: "0s", duration: "4s" },
+    { src: s3Img.src, className: "right-[8%] top-[10%] w-24 lg:w-32", delay: "0.8s", duration: "5s" },
+    { src: s4Img.src, className: "left-[5%] bottom-[8%] w-28 lg:w-36", delay: "1.2s", duration: "6s" },
+    { src: s5Img.src, className: "right-[3%] bottom-[12%] w-36 lg:w-48", delay: "2s", duration: "4.5s" },
+    { src: s6Img.src, className: "left-[12%] top-[45%] w-20 lg:w-28", delay: "0.5s", duration: "5.5s" },
+    { src: s7Img.src, className: "right-[14%] top-[50%] w-22 lg:w-30", delay: "1.8s", duration: "4.8s" },
+    { src: s8Img.src, className: "left-[45%] bottom-[3%] w-24 lg:w-32", delay: "2.5s", duration: "5.2s" },
+  ]
+
   return (
-    <div className="relative isolate flex min-h-screen w-full overflow-hidden bg-[#fefcff]">
-      {/* 背景层：多层径向渐变光晕 + 噪点纹理 */}
+    <div className="relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#0a0e1a] p-6">
+      {/* 背景层：星空粒子 canvas */}
+      <Starfield />
+
+      {/* 背景层：深空径向渐变光晕 */}
       <div
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: `
-            radial-gradient(circle at 20% 30%, rgba(255, 182, 193, 0.45), transparent 55%),
-            radial-gradient(circle at 80% 70%, rgba(173, 216, 230, 0.45), transparent 55%),
-            radial-gradient(circle at 50% 100%, rgba(255, 218, 185, 0.35), transparent 60%)`,
+            radial-gradient(circle at 20% 30%, rgba(34, 211, 238, 0.08), transparent 55%),
+            radial-gradient(circle at 80% 70%, rgba(20, 184, 166, 0.08), transparent 55%)`,
         }}
       />
-      {/* 浮动装饰球：缓慢上下移动，增加灵动感 */}
-      <div className="pointer-events-none absolute left-[8%] top-[15%] z-0 size-72 rounded-full bg-gradient-to-br from-pink-300/40 to-rose-300/30 blur-3xl animate-pulse" />
-      <div
-        className="pointer-events-none absolute right-[12%] bottom-[18%] z-0 size-80 rounded-full bg-gradient-to-br from-sky-300/40 to-indigo-300/30 blur-3xl animate-pulse"
-        style={{ animationDelay: "1.5s" }}
-      />
 
-      {/* 左侧品牌展示区（桌面端显示） */}
-      <aside className="relative z-10 hidden w-1/2 flex-col justify-between p-12 lg:flex xl:p-16">
-        <div className="flex items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-white/60 shadow-lg shadow-pink-500/10 backdrop-blur-sm">
-            <Camera className="size-6 text-pink-500" />
-          </div>
-          <span className="text-2xl font-semibold tracking-tight text-slate-800">{title}</span>
+      {/* 背景装饰图：各角浮动 */}
+      {decorations.map((dec, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={i}
+          src={dec.src}
+          alt=""
+          className={`pointer-events-none absolute z-0 opacity-15 animate-pulse ${dec.className}`}
+          style={{ animationDuration: dec.duration, animationDelay: dec.delay }}
+          draggable={false}
+        />
+      ))}
+
+      {/* 居中悬浮卡片：半透明让星空贯穿 */}
+      <div className="relative z-10 flex w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-cyan-500/20 bg-slate-900/30 shadow-2xl shadow-cyan-500/10 backdrop-blur-md md:flex-row">
+        {/* 卡片内装饰图：左上角 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={s4Img.src}
+          alt=""
+          className="pointer-events-none absolute left-0 top-0 z-0 h-32 w-32 object-cover opacity-10 md:h-40 md:w-40"
+          draggable={false}
+        />
+        {/* 卡片内装饰图：右下角 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={s7Img.src}
+          alt=""
+          className="pointer-events-none absolute bottom-0 right-0 z-0 h-36 w-36 object-cover opacity-10 md:h-48 md:w-48"
+          draggable={false}
+        />
+
+        {/* 卡片左侧：Logo 圆环（仅桌面端显示） */}
+        <div className="hidden items-center justify-center border-r border-cyan-500/10 p-12 md:flex md:w-1/2">
+          <LogoRing size={280} />
         </div>
 
-        <div className="flex flex-col gap-6">
-          <h1 className="text-balance text-5xl font-bold leading-tight tracking-tight text-slate-800 xl:text-6xl">
-            {t("tagline")}
-          </h1>
-          <p className="max-w-md text-lg text-slate-600">{t("subtitle")}</p>
-
-          <ul className="mt-4 flex flex-col gap-4">
-            <li className="flex items-center gap-3 text-slate-700">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-white/70 shadow-sm backdrop-blur-sm">
-                <Images className="size-4 text-pink-500" />
-              </span>
-              <span className="text-[15px]">{t("feature1")}</span>
-            </li>
-            <li className="flex items-center gap-3 text-slate-700">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-white/70 shadow-sm backdrop-blur-sm">
-                <Sparkles className="size-4 text-pink-500" />
-              </span>
-              <span className="text-[15px]">{t("feature2")}</span>
-            </li>
-            <li className="flex items-center gap-3 text-slate-700">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-white/70 shadow-sm backdrop-blur-sm">
-                <Shield className="size-4 text-pink-500" />
-              </span>
-              <span className="text-[15px]">{t("feature3")}</span>
-            </li>
-          </ul>
-        </div>
-
-        <p className="text-sm text-slate-400">© {new Date().getFullYear()} {title}. All rights reserved.</p>
-      </aside>
-
-      {/* 右侧表单区 */}
-      <main className="relative z-10 flex w-full flex-col items-center justify-center p-6 md:p-10 lg:w-1/2">
-        <div className="flex w-full max-w-sm flex-col gap-8">
-          {/* 移动端 Logo（桌面端已显示在左侧） */}
-          <div className="flex items-center justify-center gap-3 lg:hidden">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-white/70 shadow-lg shadow-pink-500/10 backdrop-blur-sm">
-              <Camera className="size-5 text-pink-500" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight text-slate-800">{title}</span>
+        {/* 卡片右侧：登录表单 */}
+        <div className="relative z-10 flex flex-col justify-center p-8 md:w-1/2 md:p-12">
+          {/* 登录标题居中 */}
+          <div className="mb-7 flex flex-col items-center gap-2 text-center">
+            <h2 className="text-2xl font-semibold text-slate-100">{t("signIn")}</h2>
+            <p className="text-sm text-slate-400">{t("description")}</p>
           </div>
 
-          {/* 玻璃拟态卡片容器 */}
-          <div className="rounded-3xl border border-white/60 bg-white/60 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl md:p-10">
-            <div className="mb-7 flex flex-col gap-2">
-              <h2 className="text-2xl font-semibold text-slate-800">{t("signIn")}</h2>
-              <p className="text-sm text-slate-500">{t("description")}</p>
-            </div>
-
-            <LoginForm title={title} loading={loading} onLogin={handleLogin} />
-          </div>
+          <LoginForm title={title} loading={loading} onLogin={handleLogin} />
         </div>
-      </main>
+      </div>
     </div>
   )
 }

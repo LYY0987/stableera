@@ -152,6 +152,37 @@
     scrollbar-color: var(--scrollbar-color) transparent;
 }
 
+/* 登录页圆环旋转动画 */
+@keyframes spin-clockwise {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@keyframes spin-counterclockwise {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+.animate-spin-clockwise {
+    animation: spin-clockwise 30s linear infinite;
+}
+.animate-spin-counterclockwise {
+    animation: spin-counterclockwise 20s linear infinite;
+}
+.animate-spin-clockwise-slow {
+    animation: spin-clockwise 45s linear infinite;
+}
+.animate-spin-counterclockwise-slow {
+    animation: spin-counterclockwise 35s linear infinite;
+}
+
+/* 星空粒子闪烁动画 */
+@keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+}
+.animate-twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+}
+
 .yarl__slide {
     padding: 0 !important;
 }

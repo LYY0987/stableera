@@ -25,6 +25,7 @@ import { useFavoriteContext } from "./provider"
 import { useApp } from "@/app/(main)/provider"
 import { PhotoDateDrawer } from "@/components/photo/photo-date-drawer"
 import { PhotoMasonrySkeleton } from "@/components/photo/photo-masonry-skeleton"
+import { ScrollToTop } from "@/components/photo/scroll-to-top"
 import { useTranslations } from "next-intl"
 
 const AlbumSelectDialog = dynamic(
@@ -168,6 +169,7 @@ export default function Page() {
               <PhotoMasonrySkeleton photos={initialPhotos} />
             )}
           </div>
+          {isBrowser && <ScrollToTop />}
         </SidebarInset>
       </SidebarProvider>
       <PhotoViewer

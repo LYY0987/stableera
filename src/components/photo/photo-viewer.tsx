@@ -11,6 +11,7 @@ import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, CircleAlertIcon, Circ
 import { PhotoInfoSidebar, PhotoViewerBlurBackground } from "@/components/photo/photo-info-sidebar"
 import { useTapAction } from "@/hooks/use-tap-action"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { getThumbHashUrl } from "@/lib/thumb-hash"
 import { type PhotoVo } from "@/server/entity/vo/photo"
 import { usePhotoStore } from "@/store/photo-store"
@@ -292,44 +293,58 @@ function OriginalProgressButton({ progress, error }: { progress: OriginalProgres
 // 渲染上一张按钮。
 function PrevButton({ showActions }: { showActions: boolean }) {
   const { prev } = useController()
+  const t = useTranslations("photos.viewer.actions")
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className={[
-        "absolute top-1/2 left-3 z-40 hidden rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50 md:inline-flex",
-        getActionVisibleClass(showActions),
-      ].join(" ")}
-      style={{ transform: "translateY(-50%)" }}
-      onClick={() => prev()}
-    >
-      <ChevronLeftIcon />
-      <span className="sr-only">Previous photo</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={[
+            "absolute top-1/2 left-3 z-40 hidden rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50 md:inline-flex",
+            getActionVisibleClass(showActions),
+          ].join(" ")}
+          style={{ transform: "translateY(-50%)" }}
+          onClick={() => prev()}
+          aria-label={t("previous")}
+        >
+          <ChevronLeftIcon />
+          <span className="sr-only">{t("previous")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{t("previous")}</TooltipContent>
+    </Tooltip>
   )
 }
 
 // 渲染下一张按钮。
 function NextButton({ showActions }: { showActions: boolean }) {
   const { next } = useController()
+  const t = useTranslations("photos.viewer.actions")
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className={[
-        "absolute top-1/2 right-3 z-40 hidden rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50 md:inline-flex",
-        getActionVisibleClass(showActions),
-      ].join(" ")}
-      style={{ transform: "translateY(-50%)" }}
-      onClick={() => next()}
-    >
-      <ChevronRightIcon />
-      <span className="sr-only">Next photo</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={[
+            "absolute top-1/2 right-3 z-40 hidden rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50 md:inline-flex",
+            getActionVisibleClass(showActions),
+          ].join(" ")}
+          style={{ transform: "translateY(-50%)" }}
+          onClick={() => next()}
+          aria-label={t("next")}
+        >
+          <ChevronRightIcon />
+          <span className="sr-only">{t("next")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="left">{t("next")}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -343,6 +358,8 @@ function FullscreenButton({
   showActions: boolean
   onHideActions: () => void
 }) {
+  const t = useTranslations("photos.viewer.actions")
+
   if (fullscreen) {
     return null
   }
@@ -356,19 +373,25 @@ function FullscreenButton({
   const tap = useTapAction(openFullscreen)
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className={[
-        "absolute top-2 right-2 md:top-3 md:right-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
-        getActionVisibleClass(showActions),
-      ].join(" ")}
-      {...tap}
-    >
-      <MaximizeIcon />
-      <span className="sr-only">Enter fullscreen</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={[
+            "absolute top-2 right-2 md:top-3 md:right-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
+            getActionVisibleClass(showActions),
+          ].join(" ")}
+          aria-label={t("enterFullscreen")}
+          {...tap}
+        >
+          <MaximizeIcon />
+          <span className="sr-only">{t("enterFullscreen")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("enterFullscreen")}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -382,32 +405,40 @@ function InfoButton({
   open: boolean
   onToggle: () => void
 }) {
+  const t = useTranslations("photos.viewer.actions")
   const tap = useTapAction(onToggle)
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className={[
-        "absolute top-2 right-2 md:top-3 md:right-3 z-40 rounded-full text-white transition-opacity duration-200",
-        open ? "bg-black/50 hover:bg-black/50" : "bg-black/40 hover:bg-black/50",
-        getActionVisibleClass(showActions),
-      ].join(" ")}
-      {...tap}
-    >
-      <Menu className="md:hidden" />
-      {open
-        ? <PanelRightClose className="hidden md:block" />
-        : <PanelRightOpen className="hidden md:block" />}
-      <span className="sr-only">Photo information</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={[
+            "absolute top-2 right-2 md:top-3 md:right-3 z-40 rounded-full text-white transition-opacity duration-200",
+            open ? "bg-black/50 hover:bg-black/50" : "bg-black/40 hover:bg-black/50",
+            getActionVisibleClass(showActions),
+          ].join(" ")}
+          aria-label={open ? t("infoClose") : t("info")}
+          {...tap}
+        >
+          <Menu className="md:hidden" />
+          {open
+            ? <PanelRightClose className="hidden md:block" />
+            : <PanelRightOpen className="hidden md:block" />}
+          <span className="sr-only">{open ? t("infoClose") : t("info")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{open ? t("infoClose") : t("info")}</TooltipContent>
+    </Tooltip>
   )
 }
 
 // 渲染旋转按钮。
 function RotateButton({ showActions, onRotate }: { showActions: boolean, onRotate: (photoId: string) => void }) {
   const { currentSlide } = useLightboxState()
+  const t = useTranslations("photos.viewer.actions")
   const photoSlide = currentSlide && isImageSlide(currentSlide) ? currentSlide as PhotoSlide : null
 
   // 把当前照片 id 交给父组件更新旋转角度。
@@ -422,19 +453,25 @@ function RotateButton({ showActions, onRotate }: { showActions: boolean, onRotat
   const tap = useTapAction(rotatePhoto)
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className={[
-        "absolute top-2 right-11.5 md:right-13 md:top-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
-        getActionVisibleClass(showActions),
-      ].join(" ")}
-      {...tap}
-    >
-      <RotateCcwSquare />
-      <span className="sr-only">Rotate photo</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={[
+            "absolute top-2 right-11.5 md:right-13 md:top-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
+            getActionVisibleClass(showActions),
+          ].join(" ")}
+          aria-label={t("rotate")}
+          {...tap}
+        >
+          <RotateCcwSquare />
+          <span className="sr-only">{t("rotate")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("rotate")}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -451,6 +488,7 @@ function LoadOriginalButton({
   onLoadOriginal: (slide: PhotoSlide) => void
 }) {
   const { currentSlide } = useLightboxState()
+  const t = useTranslations("photos.viewer.actions")
   const photoSlide = currentSlide && isImageSlide(currentSlide) ? currentSlide as PhotoSlide : null
   const cacheSrc = photoSlide ? getPhotoCache(photoSlide.photoId) : undefined
   const originalLoaded = Boolean(photoSlide && (originalPhoto?.key === photoSlide.key || cacheSrc?.includes("photo/")))
@@ -469,41 +507,54 @@ function LoadOriginalButton({
   const tap = useTapAction(loadOriginal)
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className={[
-        "absolute top-2 right-21 md:right-23.25 md:top-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
-        getActionVisibleClass(showActions),
-      ].join(" ")}
-      {...tap}
-    >
-      {originalLoaded ? <CircleIcon /> : <LoaderCircleIcon />}
-      <span className="sr-only">Load original photo</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={[
+            "absolute top-2 right-21 md:right-23.25 md:top-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
+            getActionVisibleClass(showActions),
+          ].join(" ")}
+          aria-label={t("loadOriginal")}
+          {...tap}
+        >
+          {originalLoaded ? <CircleIcon /> : <LoaderCircleIcon />}
+          <span className="sr-only">{t("loadOriginal")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("loadOriginal")}</TooltipContent>
+    </Tooltip>
   )
 }
 
 // 渲染关闭按钮。
 function CloseButton({ showActions }: { showActions: boolean }) {
   const { close } = useController()
+  const t = useTranslations("photos.viewer.actions")
   const tap = useTapAction(() => close())
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant="secondary"
-      className={[
-        "absolute top-2 left-2 md:top-3 md:left-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
-        getActionVisibleClass(showActions),
-      ].join(" ")}
-      {...tap}
-    >
-      <ArrowLeftIcon />
-      <span className="sr-only">Back</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={[
+            "absolute top-2 left-2 md:top-3 md:left-3 z-40 rounded-full bg-black/40 text-white transition-opacity duration-200 hover:bg-black/50",
+            getActionVisibleClass(showActions),
+          ].join(" ")}
+          aria-label={t("close")}
+          {...tap}
+        >
+          <ArrowLeftIcon />
+          <span className="sr-only">{t("close")}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("close")}</TooltipContent>
+    </Tooltip>
   )
 }
 

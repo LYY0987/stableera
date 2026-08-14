@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { PhotoUploadSettings, readPhotoUploadSettings } from "@/components/photo/photo-upload-settings"
 import { useApp } from "@/app/(main)/provider"
 import { createPhotoCover } from "@/lib/upload-cover"
@@ -514,11 +515,22 @@ export function PhotoUploadDialog() {
                   loading="lazy"
                   className="h-full w-full object-cover"
                 />
-                {preview.progress < 100 && (
-                  <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 bg-black/60 transition-[height] duration-200"
-                    style={{ height: `${100 - preview.progress}%` }}
-                  />
+                {(preview.status === "uploading" || preview.status === "waiting") && (
+                  <div className="absolute inset-0 bg-black/40">
+                    {preview.status === "uploading" && (
+                      <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-center">
+                        <span className="rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium tabular-nums text-white">
+                          {preview.progress}%
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20">
+                      <div
+                        className="h-full bg-primary transition-[width] duration-200"
+                        style={{ width: `${preview.progress}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
                 {preview.status === "success" && (
                   <div className="absolute right-1 bottom-1 flex size-5 items-center justify-center rounded-full bg-black/60 text-white">
@@ -556,7 +568,16 @@ export function PhotoUploadDialog() {
             className="hidden"
             onChange={handleFileChange}
           />
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            {previewsRef.current.length > 0 && (
+              <span className="hidden truncate text-xs text-muted-foreground sm:inline">
+                {t("summary", {
+                  total: previewsRef.current.length,
+                  success: previewsRef.current.filter((p) => p.status === "success" || p.status === "skipped").length,
+                  failed: previewsRef.current.filter((p) => p.status === "failed").length,
+                })}
+              </span>
+            )}
             <Select
               value={selectedStorageId ?? undefined}
               onValueChange={setStorageId}
@@ -574,11 +595,16 @@ export function PhotoUploadDialog() {
               </SelectContent>
             </Select>
             <Popover>
-              <PopoverTrigger asChild>
-                <Button type="button" variant="ghost" size="icon" aria-label="Upload settings">
-                  <SettingsIcon className="size-4" />
-                </Button>
-              </PopoverTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" aria-label={t("actions.settings")}>
+                      <SettingsIcon className="size-4" />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top">{t("actions.settings")}</TooltipContent>
+              </Tooltip>
               <PopoverContent side="top" align="start" className="w-64">
                 <PhotoUploadSettings onChange={runNext} />
               </PopoverContent>

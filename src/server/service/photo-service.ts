@@ -1,7 +1,8 @@
-import { and, asc, count, desc, eq, getTableColumns, gte, inArray, isNotNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, getTableColumns, gte, inArray, isNotNull, like, lt, lte, notInArray, or, sql } from 'drizzle-orm';
 import { createId } from '@/server/lib/id';
 import { type Photo, photoTab } from '@/server/entity/photo';
 import { albumPhotoTab } from '@/server/entity/album-photo';
+import { albumTab } from '@/server/entity/album';
 import { orm } from '@/server/infra/db';
 import BizError from '@/server/error/biz-error';
 import { storage } from '@/server/storage/storage';
@@ -16,6 +17,7 @@ import {
   type PhotoTakenDateListBo,
 } from '@/server/entity/bo/photo';
 import { PHOTO_LIST_PAGE_SIZE } from '@/server/const/global';
+import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
 import { PhotoFavoriteEnum, PhotoStatusEnum } from '@/server/enums/photo-enum';
 import { StorageTypeOptions } from '@/server/enums/storage-enum';
 import { type PageVo } from '@/server/entity/vo/common';
@@ -68,6 +70,10 @@ const photoService = {
       whereList.push(lte(photoTab.takenTime, params.endTakenTime));
     }
 
+    if (params.keyword?.trim()) {
+      whereList.push(like(photoTab.name, `%${params.keyword.trim()}%`));
+    }
+
     if (params.cursorPhotoId && params.cursorTime) {
       const cursorWhere = or(
         lt(orderColumn, params.cursorTime),
@@ -96,7 +102,13 @@ const photoService = {
       : await orm
         .select()
         .from(photoTab)
-        .where(and(...whereList))
+        .where(and(
+          ...whereList,
+          // 照片墙隐藏私密相册中的照片：状态为正常且未指定相册时排除。
+          status === PhotoStatusEnum.NORMAL
+            ? notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery(userId))
+            : sql`1=1`
+        ))
         .orderBy(desc(orderColumn), desc(photoTab.photoId))
         .limit(size);
 
@@ -155,7 +167,11 @@ const photoService = {
       : await orm
         .select(selectColumns)
         .from(photoTab)
-        .where(and(...whereList))
+        .where(and(
+          ...whereList,
+          // 照片墙日期统计同样隐藏私密相册中的照片。
+          notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery(userId))
+        ))
         .groupBy(takenDate)
         .orderBy(asc(takenDate));
 
@@ -163,6 +179,18 @@ const photoService = {
       date: item.date,
       count: Number(item.count),
     }));
+  },
+
+  // 构造子查询：返回当前用户私密相册中所有照片的 photoId。
+  buildPrivateAlbumPhotoIdQuery(userId: string) {
+    return orm
+      .select({ photoId: albumPhotoTab.photoId })
+      .from(albumPhotoTab)
+      .innerJoin(albumTab, eq(albumPhotoTab.albumId, albumTab.albumId))
+      .where(and(
+        eq(albumTab.userId, userId),
+        eq(albumTab.visibility, AlbumVisibilityEnum.PRIVATE)
+      ));
   },
 
   // 根据原文件名生成存储 key，若 key 已存在则在扩展名前追加时间戳。

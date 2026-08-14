@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { UserStatusEnum, UserTypeEnum } from "@/server/enums/user-enum"
 import { type UserVo } from "@/server/entity/vo/user"
 import { useTranslations } from "next-intl"
@@ -132,11 +133,16 @@ export function useUserColumns({ onEdit, onToggleStatus, onDelete }: UserColumns
       },
       cell: ({ row }) => (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Open actions menu">
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" aria-label={t("actions.more")}>
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{t("actions.more")}</TooltipContent>
+          </Tooltip>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => onEdit(row.original)}>{t("edit")}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onToggleStatus(row.original.userId)}>

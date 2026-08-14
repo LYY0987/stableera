@@ -138,7 +138,7 @@ export function PhotoCard({
 
   return (
     <div
-      className="group relative overflow-hidden bg-muted"
+      className="group relative overflow-hidden rounded-sm bg-muted"
       onClick={handlePhotoClick}
       onContextMenu={handlePhotoContextMenu}
       style={{

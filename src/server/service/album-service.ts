@@ -5,7 +5,8 @@ import { albumPhotoTab } from '@/server/entity/album-photo';
 import { photoTab } from '@/server/entity/photo';
 import { orm } from '@/server/infra/db';
 import BizError from '@/server/error/biz-error';
-import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo } from '@/server/entity/bo/album';
+import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo } from '@/server/entity/bo/album';
+import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
 import { PhotoStatusEnum } from '@/server/enums/photo-enum';
 import { type AlbumVo } from '@/server/entity/vo/album';
 import { storageService } from '@/server/service/storage-service';
@@ -100,11 +101,15 @@ const albumService = {
       throw new BizError('album.nameExists');
     }
 
+    const visibility = params.visibility === AlbumVisibilityEnum.PRIVATE
+      ? AlbumVisibilityEnum.PRIVATE
+      : AlbumVisibilityEnum.PUBLIC;
     const now = new Date().toISOString();
 
     const [album] = await orm.insert(albumTab).values({
       albumId: createId(),
       name,
+      visibility,
       userId,
       sort: 0,
       createTime: now,
@@ -223,6 +228,23 @@ const albumService = {
     await orm.update(albumTab)
       .set({
         sort: Date.now(),
+        updateTime: new Date().toISOString()
+      })
+      .where(and(
+        eq(albumTab.albumId, params.albumId),
+        eq(albumTab.userId, userId)
+      ));
+  },
+
+  // 切换当前用户指定相册的可见性（公开/私密）。
+  async setVisibility(params: AlbumSetVisibilityBo, userId: string): Promise<void> {
+    const visibility = params.visibility === AlbumVisibilityEnum.PRIVATE
+      ? AlbumVisibilityEnum.PRIVATE
+      : AlbumVisibilityEnum.PUBLIC;
+
+    await orm.update(albumTab)
+      .set({
+        visibility,
         updateTime: new Date().toISOString()
       })
       .where(and(

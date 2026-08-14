@@ -17,11 +17,18 @@ interface AlbumActionMenuProps {
   shadow?: boolean
   onRename: () => void
   onTop: () => void
+  onVisibility: () => void
   onDelete: () => void
 }
 
 // 渲染相册卡片右上角的更多操作菜单。
-export function AlbumActionMenu({ shadow = true, onRename, onTop, onDelete }: AlbumActionMenuProps) {
+export function AlbumActionMenu({ 
+  shadow = true, 
+  onRename, 
+  onTop, 
+  onVisibility, 
+  onDelete 
+}: AlbumActionMenuProps) {
   const t = useTranslations("albums")
   // open 记录当前下拉菜单是否打开，用于打开时隐藏图标阴影。
   const [open, setOpen] = useState(false)
@@ -47,6 +54,9 @@ export function AlbumActionMenu({ shadow = true, onRename, onTop, onDelete }: Al
       <DropdownMenuContent align="end" className="w-24 min-w-24">
         <DropdownMenuItem onSelect={onRename}>
           {t("actions.rename")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onVisibility}>
+          {t("actions.visibility")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={onTop}>
           {t("actions.pin")}

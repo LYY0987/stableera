@@ -13,6 +13,7 @@
   "login.credentialsRequired": "Username and password are required.",
   "login.invalidCredentials": "Incorrect username or password.",
   "login.invalidCaptcha": "The captcha is incorrect or has expired.",
+  "login.accountLocked": "This account is locked. Please try again in 15 minutes.",
   "user.disabled": "This user has been disabled.",
   "user.usernameRequired": "Username is required.",
   "user.avatarInvalid": "Invalid profile picture format.",

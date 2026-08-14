@@ -2,6 +2,8 @@
 
 interface AlbumAddBo {
   name: string;
+  // 可见性 0公开 1私密，不传时默认公开。
+  visibility?: number;
 }
 
 interface AlbumAddPhotoBo {
@@ -27,4 +29,10 @@ interface AlbumSetTopBo {
   albumId: string;
 }
 
-export type { AlbumAddBo, AlbumAddPhotoBo, AlbumDeleteBo, AlbumRemovePhotoBo, AlbumSetNameBo, AlbumSetTopBo };
+interface AlbumSetVisibilityBo {
+  albumId: string;
+  // 可见性 0公开 1私密。
+  visibility: number;
+}
+
+export type { AlbumAddBo, AlbumAddPhotoBo, AlbumDeleteBo, AlbumRemovePhotoBo, AlbumSetNameBo, AlbumSetTopBo, AlbumSetVisibilityBo };

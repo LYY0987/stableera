@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { AlertDialogDestructive } from "@/components/common/alert-destructive"
 import { AlbumAddDialog } from "@/components/album/album-add-dialog"
 import { AlbumRenameDialog } from "@/components/album/album-rename-dialog"
+import { AlbumVisibilityDialog } from "@/components/album/album-visibility-dialog"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,7 +21,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useAlbumContext } from "./provider"
 import { useApp } from "@/app/(main)/provider"
-import { albumAdd, albumDelete, albumList, albumSetName, albumSetTop } from "@/request/album"
+import { albumAdd, albumDelete, albumList, albumSetName, albumSetTop, albumSetVisibility } from "@/request/album"
 import { type AlbumVo } from "@/server/entity/vo/album"
 import { useTranslations } from "next-intl"
 
@@ -41,6 +42,10 @@ export default function Page() {
   const [renameOpen, setRenameOpen] = useState(false)
   // renamingAlbum 保存当前正在修改名字的相册。
   const [renamingAlbum, setRenamingAlbum] = useState<AlbumVo | null>(null)
+  // visibilityOpen 控制修改可见性弹框的打开状态。
+  const [visibilityOpen, setVisibilityOpen] = useState(false)
+  // visibilityAlbum 保存当前正在修改可见性的相册。
+  const [visibilityAlbum, setVisibilityAlbum] = useState<AlbumVo | null>(null)
   // deleteOpen 控制删除确认弹框的打开状态。
   const [deleteOpen, setDeleteOpen] = useState(false)
   // deletingAlbum 保存当前等待删除确认的相册。
@@ -73,10 +78,46 @@ export default function Page() {
   }
 
   // 添加相册，并把新相册展示到列表顶部。
-  function addAlbum(name: string) {
-    albumAdd({ name }).then(() => {
+  function addAlbum(name: string, visibility?: number) {
+    albumAdd({ name, visibility }).then(() => {
       void refreshAlbumData()
     })
+  }
+
+  // 打开修改相册可见性弹框。
+  function changeAlbumVisibility(album: AlbumVo) {
+    setVisibilityAlbum(album)
+    setVisibilityOpen(true)
+  }
+
+  // 处理相册可见性修改。
+  function confirmChangeVisibility(visibility: number) {
+    const album = visibilityAlbum
+
+    if (!album) {
+      return
+    }
+
+    setVisibilityOpen(false)
+    setTimeout(() => {
+      setVisibilityAlbum(null)
+    }, 300)
+
+    albumSetVisibility({
+      albumId: album.albumId,
+      visibility,
+    }).then(() => {
+      void refreshAlbumData()
+    })
+  }
+
+  // 处理可见性修改弹框打开状态。
+  function handleVisibilityOpenChange(open: boolean) {
+    setVisibilityOpen(open)
+
+    if (!open) {
+      setVisibilityAlbum(null)
+    }
   }
 
   // 打开修改相册名字弹框。
@@ -202,6 +243,7 @@ export default function Page() {
               resetKey={albumListKey}
               onAlbumRename={renameAlbum}
               onAlbumTop={topAlbum}
+              onAlbumVisibility={changeAlbumVisibility}
               onAlbumDelete={openDeleteAlbum}
             />
           </div>
@@ -213,6 +255,14 @@ export default function Page() {
           name={renamingAlbum.name}
           onOpenChange={handleRenameOpenChange}
           onNameConfirm={renameAlbumName}
+        />
+      )}
+      {visibilityAlbum && (
+        <AlbumVisibilityDialog
+          open={visibilityOpen}
+          visibility={visibilityAlbum.visibility}
+          onOpenChange={handleVisibilityOpenChange}
+          onVisibilityConfirm={confirmChangeVisibility}
         />
       )}
       <AlertDialogDestructive

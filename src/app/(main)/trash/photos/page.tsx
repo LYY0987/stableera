@@ -27,6 +27,8 @@ import { useApp } from "@/app/(main)/provider"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon, BrushCleaning } from "lucide-react"
 import { PhotoMasonrySkeleton } from "@/components/photo/photo-masonry-skeleton"
+import { ScrollToTop } from "@/components/photo/scroll-to-top"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTranslations } from "next-intl"
 
 export default function Page() {
@@ -143,16 +145,22 @@ export default function Page() {
           <header
             className="sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between gap-2 bg-background transition-[width,height] ease-linear">
             <div className="flex min-w-0 items-center gap-2 px-4">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="-ml-1"
-                onClick={() => router.back()}
-              >
-                <ArrowLeftIcon />
-                <span className="sr-only">Back</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="-ml-1"
+                    onClick={() => router.back()}
+                    aria-label={t("actions.back")}
+                  >
+                    <ArrowLeftIcon />
+                    <span className="sr-only">{t("actions.back")}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{t("actions.back")}</TooltipContent>
+              </Tooltip>
               <Separator
                 orientation="vertical"
                 className="mr-2 data-vertical:h-4 data-vertical:self-auto"
@@ -168,14 +176,20 @@ export default function Page() {
               </Breadcrumb>
             </div>
             <div className="fixed left-[calc(100vw-3.5rem)]  md:left-[calc(100vw-4rem)] top-0 flex h-12 items-center gap-3 px-4">
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={openClearPhotos}
-              >
-                <BrushCleaning />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={openClearPhotos}
+                    aria-label={t("actions.empty")}
+                  >
+                    <BrushCleaning />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("actions.empty")}</TooltipContent>
+              </Tooltip>
             </div>
           </header>
           <div className="px-1 md:pl-1 md:pr-0">
@@ -191,6 +205,7 @@ export default function Page() {
               <PhotoMasonrySkeleton photos={initialPhotos} />
             )}
           </div>
+          {isBrowser && <ScrollToTop />}
         </SidebarInset>
       </SidebarProvider>
       <AlertDialogDestructive

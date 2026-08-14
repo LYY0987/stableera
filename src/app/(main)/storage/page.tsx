@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { AlertDialogDestructive } from "@/components/common/alert-destructive"
 import { StorageAddDialog } from "@/components/storage/storage-add-dialog"
+import { StorageDashboard } from "@/components/storage/storage-dashboard"
 import { DataTable } from "@/components/storage/storage-data-table"
 import { Button } from "@/components/ui/button"
 import {
@@ -191,6 +192,7 @@ export default function Page() {
             </div>
           </header>
           <div className="space-y-3 px-4 py-4" >
+            <StorageDashboard storages={data} />
             <DataTable
               columns={columns}
               data={data}
