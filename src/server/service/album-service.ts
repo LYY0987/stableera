@@ -14,13 +14,21 @@ import { formatHttpUrl, toMediaUrl } from '@/lib/url';
 import { fileService } from '@/server/service/file-service';
 import { FileTypeEnum } from '@/server/enums/file-enum';
 import { type File } from '@/server/entity/file';
+import { cache } from '@/server/infra/cache';
+import { ALBUM_LIST_CACHE_KEY } from '@/server/const/cache';
 
 // 这个模块处理相册数据写入相关业务。
 
 const albumService = {
 
-  // 查询当前用户的全部相册列表。
+  // 查询当前用户的全部相册列表，优先读缓存。
   async list(userId: string): Promise<AlbumVo[]> {
+    const cacheKey = ALBUM_LIST_CACHE_KEY + userId;
+    const cached = await cache.get<AlbumVo[]>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
 
     const albumList = await orm
       .select()
@@ -76,7 +84,15 @@ const albumService = {
       };
     });
 
+    // 写入缓存，TTL 60 秒。
+    await cache.set(cacheKey, list, { ttl: 60 });
+
     return list;
+  },
+
+  // 相册数据变更后清除相册列表缓存。
+  async invalidateListCache(userId: string): Promise<void> {
+    await cache.delete(ALBUM_LIST_CACHE_KEY + userId);
   },
 
   // 添加当前用户的相册，并阻止同一用户创建重复名称的相册。
@@ -115,6 +131,8 @@ const albumService = {
       createTime: now,
       updateTime: now,
     }).returning();
+
+    await this.invalidateListCache(userId);
 
     return album;
   },
@@ -169,6 +187,8 @@ const albumService = {
     if (rows.length) {
       await orm.insert(albumPhotoTab).values(rows);
     }
+
+    await this.invalidateListCache(userId);
   },
 
   // 把当前用户指定相册中的照片关联移除。
@@ -202,6 +222,8 @@ const albumService = {
         eq(albumPhotoTab.albumId, params.albumId),
         inArray(albumPhotoTab.photoId, params.photoIds)
       ));
+
+    await this.invalidateListCache(userId);
   },
 
   // 修改当前用户指定相册的名称。
@@ -221,6 +243,8 @@ const albumService = {
         eq(albumTab.albumId, params.albumId),
         eq(albumTab.userId, userId)
       ));
+
+    await this.invalidateListCache(userId);
   },
 
   // 把当前用户指定相册置顶。
@@ -234,6 +258,8 @@ const albumService = {
         eq(albumTab.albumId, params.albumId),
         eq(albumTab.userId, userId)
       ));
+
+    await this.invalidateListCache(userId);
   },
 
   // 切换当前用户指定相册的可见性（公开/私密）。
@@ -251,6 +277,8 @@ const albumService = {
         eq(albumTab.albumId, params.albumId),
         eq(albumTab.userId, userId)
       ));
+
+    await this.invalidateListCache(userId);
   },
 
   // 删除当前用户指定相册，并清理相册照片关联。
@@ -265,6 +293,7 @@ const albumService = {
         eq(albumTab.userId, userId)
       ));
 
+    await this.invalidateListCache(userId);
   },
 
   // 删除指定用户的全部相册，并清理这些相册的照片关联。
@@ -288,6 +317,8 @@ const albumService = {
 
     await orm.delete(albumTab)
       .where(eq(albumTab.userId, userId));
+
+    await this.invalidateListCache(userId);
   },
 
   // 查询当前用户回收站虚拟相册，并统计已回收照片数量和最新回收封面。
@@ -319,6 +350,8 @@ const albumService = {
       albumId: 'trash',
       name: 'trash.title',
       description: '',
+      // 回收站是虚拟相册，不参与照片墙公开/私密过滤。
+      visibility: AlbumVisibilityEnum.PUBLIC,
       sort: 0,
       createTime: now,
       updateTime: now,

@@ -98,66 +98,26 @@ idx_albumPhoto_albumId - ON album_photo(album_id)
 **目标**：减少数据库查询，加快响应速度
 
 **实现状态**：
-- ✅ 内存缓存服务创建 (`memory-cache.ts`)
-- ✅ 缓存清理任务创建 (`memory-cache-task.ts`)
-- ✅ 自动启动注册完成
-- ✅ 缓存统计功能实现
+- ✅ 相册列表热查询接入项目已有 `cache.ts`（SQLite 缓存表）
+- ✅ 相册全部写操作后主动失效缓存
+- ✅ 60 秒 TTL 自动过期兜底
 
 **关键文件**：
-- `src/server/infra/memory-cache.ts` - 缓存管理服务
-- `src/server/task/memory-cache-task.ts` - 清理任务
-- `src/server/task/index.ts` - 任务启动器
+- `src/server/service/album-service.ts` - 缓存读写 + 写后失效
+- `src/server/infra/cache.ts` - 项目已有缓存基础设施
+- `src/server/const/cache.ts` - `ALBUM_LIST_CACHE_KEY` 键定义
 
 **缓存配置**：
-- 相册列表 TTL: 5 分钟
-- 相册详情 TTL: 10 分钟
-- 照片列表 TTL: 3 分钟
-- 最大条目数: 1000
-- 超限清理: 删除最旧 20%
+- 相册列表 TTL: 60 秒
+- 缓存存储: SQLite `cache` 表（项目已有，无需额外依赖）
+- 自动清理: `cache-task.ts` 定时清除过期条目
 
 **完成特性**：
-- 简单键值存储：无 Redis 依赖
-- 自动过期检查：每 5 分钟清理一次
-- TTL 支持：灵活的过期时间设置
-- 缓存统计：监控缓存利用率
-- 预定义键生成器：标准化缓存键
+- 读缓存：`albumService.list()` 命中缓存直接返回
+- 写后失效：add / addPhoto / removePhoto / setName / setTop / setVisibility / delete / deleteByUserId 全部主动失效
+- 跨服务失效：删除照片（photo-service）后同步失效相册列表缓存
 
-**缓存键示例**：
-```typescript
-cacheKeys.albumList(userId)        // user-{userId}-albums-list
-cacheKeys.albumDetail(albumId)     // album-{albumId}
-cacheKeys.albumPhotos(albumId)     // album-{albumId}-photos
-cacheKeys.userPhotos(userId)       // user-{userId}-photos-all
-cacheKeys.userStorage(userId)      // user-{userId}-storage
-```
-
-**使用示例**：
-```typescript
-// 缓存热数据
-const cacheKey = cacheKeys.albumList(userId);
-const cached = getCached<AlbumVo[]>(cacheKey);
-if (!cached) {
-  const albums = await fetchFromDatabase();
-  setCached(cacheKey, albums, cacheConfig.ALBUM_LIST_TTL);
-  return albums;
-}
-return cached;
-
-// 修改后立即失效
-async function updateAlbum(...) {
-  const result = await albumService.update(...);
-  deleteCached(cacheKeys.albumList(userId));
-  return result;
-}
-```
-
-**测试清单**：
-- [ ] 缓存命中率 > 60%
-- [ ] 内存使用增加 < 50MB
-- [ ] 修改相册后缓存正确失效
-- [ ] 服务器重启后缓存清空
-
-**回滚方案**：注释掉缓存调用即可
+**回滚方案**：删除 `album-service.ts` 中 `cache.get` / `cache.set` 调用即可
 
 ---
 

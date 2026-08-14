@@ -137,7 +137,6 @@ export function AlbumMasonry({ albums, resetKey = 0, onAlbumRename, onAlbumTop, 
 
     // 强制同步相册列表外层的位置和宽度。
     function syncWrapPosition() {
-      console.log(wrapPosition.width)
       setWrapPosition(getWrapPosition())
     }
 

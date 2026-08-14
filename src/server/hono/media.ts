@@ -70,7 +70,8 @@ media.get('*', async (c: Context, next: Next) => {
     return next();
   }
 
-  const obj = await storage.get(photoFile.key, photoFile.storageId);
+  // 以 uint8array 读取，Hono 的 Response body 只接受 ArrayBuffer 视图。
+  const obj = await storage.get(photoFile.key, photoFile.storageId, { as: 'uint8array' });
   const disposition = photoFile.type === FileTypeEnum.ORIGINAL ? buildContentDisposition(photoFile.name) : null;
   const headers: Record<string, string> = {
     'Content-Type': photoFile.fileType,
@@ -82,7 +83,8 @@ media.get('*', async (c: Context, next: Next) => {
     headers['Content-Disposition'] = disposition;
   }
 
-  return c.body(obj.body, 200, headers);
+  const body = obj.body as Uint8Array;
+  return c.body(new Uint8Array(body.buffer, body.byteOffset, body.byteLength) as Uint8Array<ArrayBuffer>, 200, headers);
 })
 
 export { media };

@@ -8,6 +8,8 @@ RUN apk add --no-cache python3 make g++
 
 RUN corepack enable && corepack prepare pnpm@11.6.0 --activate
 
+ENV CI=true
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY patches ./patches
 

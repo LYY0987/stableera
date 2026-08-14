@@ -23,7 +23,7 @@ class BlobStorageStrategy implements StorageStrategy {
       const cacheControl = file.metadata?.find(([name]) => name === 'Cache-Control')?.[1];
       const cacheControlMaxAge = cacheControl?.match(/max-age=(\d+)/i)?.[1];
 
-      await put(file.key, file.body, {
+      await put(file.key, Buffer.from(file.body), {
         access: 'public',
         token,
         contentType: file.type || 'application/octet-stream',

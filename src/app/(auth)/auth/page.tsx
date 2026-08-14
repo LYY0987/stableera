@@ -55,16 +55,16 @@ function Starfield() {
 
     // 绘制一帧：清空画布后逐个绘制星点，更新透明度实现闪烁。
     function draw() {
-      ctx.clearRect(0, 0, canvas!.width, canvas!.height)
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height)
       for (const s of stars) {
         s.alpha += s.speed
         if (s.alpha > 1 || s.alpha < 0.1) {
           s.speed = -s.speed
         }
-        ctx.beginPath()
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(200, 220, 255, ${Math.max(0.1, Math.min(1, s.alpha))})`
-        ctx.fill()
+        ctx!.beginPath()
+        ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx!.fillStyle = `rgba(200, 220, 255, ${Math.max(0.1, Math.min(1, s.alpha))})`
+        ctx!.fill()
       }
       animationId = requestAnimationFrame(draw)
     }

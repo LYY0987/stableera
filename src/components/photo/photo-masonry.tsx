@@ -175,7 +175,6 @@ const PhotoMasonry = memo(function PhotoMasonry({
 
     // 强制同步瀑布流外层的位置和宽度。
     function syncWrapPosition() {
-      console.log(wrapPosition.width);
       setWrapPosition(getWrapPosition())
     }
 

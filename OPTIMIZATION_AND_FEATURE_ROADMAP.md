@@ -459,17 +459,15 @@ A: 这是网络问题。生产环境通常不会出现。可以使用本地字�
 A: 在 PhotoMasonry 中注释掉 `useImagePreload` 调用即可。
 
 **Q: 缓存可以手动清空吗?**
-A: 可以，调用 `clearAllCache()` 函数。
+A: 相册列表缓存 TTL 60 秒自动过期；服务器重启缓存表不清理，可调用 `cache.delete()` 手动删除。
 
 **Q: 如何监控缓存效果?**
-A: 在开发环境中，定时任务会打印缓存统计信息。
+A: 查询 SQLite `cache` 表可查看缓存条目和过期时间。
 
 ### 获取帮助
 
 - 📖 查看 [PHASE1_COMPLETION_SUMMARY.md](PHASE1_COMPLETION_SUMMARY.md)
-- 📋 参考 [PHASE1_VERIFICATION_CHECKLIST.md](PHASE1_VERIFICATION_CHECKLIST.md)
 - 🚀 部署指南 [DEPLOYMENT_READINESS_REPORT.md](DEPLOYMENT_READINESS_REPORT.md)
-- 💻 代码示例 [src/server/infra/query-optimization-guide.ts](src/server/infra/query-optimization-guide.ts)
 
 ---
 

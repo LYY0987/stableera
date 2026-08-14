@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 构建脚本是 CommonJS，不走 ESLint 规则。
+    "scripts/**",
   ]),
 ]);
 

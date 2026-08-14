@@ -4,7 +4,7 @@
  * 这个脚本在应用启动时执行，确保索引存在
  */
 
-import { orm, db } from '@/server/infra/db';
+import { db } from '@/server/infra/db';
 
 /**
  * 创建所有必要的索引

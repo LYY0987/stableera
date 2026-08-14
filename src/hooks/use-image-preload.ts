@@ -78,6 +78,39 @@ export function useImagePreload(options: UseImagePreloadOptions = {}) {
   }, [threshold]);
 
   /**
+   * 预加载单张图片
+   */
+  const preloadImage = useCallback(
+    async (photoId: string, url: string) => {
+      if (!url) return;
+
+      try {
+        // 先检查缓存
+        if (enableCache) {
+          const cached = await imageCache.get(photoId);
+          if (cached) return;
+        }
+
+        // 用 Image 触发浏览器 HTTP 缓存预热，无需依赖 CORS。
+        await new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = url;
+        });
+
+        // 记录已预加载项
+        if (enableCache) {
+          await imageCache.set(photoId, url);
+        }
+      } catch (error) {
+        // 预加载失败不影响功能，静默处理
+      }
+    },
+    [enableCache]
+  );
+
+  /**
    * 预加载图片
    */
   const preloadImages = useCallback(
@@ -107,45 +140,7 @@ export function useImagePreload(options: UseImagePreloadOptions = {}) {
         }
       });
     },
-    [preloadCount]
-  );
-
-  /**
-   * 预加载单张图片
-   */
-  const preloadImage = useCallback(
-    async (photoId: string, url: string) => {
-      if (!url) return;
-
-      try {
-        // 先检查缓存
-        if (enableCache) {
-          const cached = await imageCache.get(photoId);
-          if (cached) return;
-        }
-
-        // 使用 fetch 预加载
-        const response = await fetch(url, {
-          method: 'HEAD',
-          mode: 'no-cors',
-        });
-
-        // 获取文件大小
-        const size = response.headers.get('content-length');
-
-        // 存储到缓存
-        if (enableCache) {
-          await imageCache.set(
-            photoId,
-            url,
-            size ? parseInt(size, 10) : undefined
-          );
-        }
-      } catch (error) {
-        // 预加载失败不影响功能，静默处理
-      }
-    },
-    [enableCache]
+    [preloadCount, preloadImage]
   );
 
   /**

@@ -505,6 +505,9 @@ const photoService = {
         eq(photoTab.userId, userId),
         inArray(photoTab.photoId, photoIds)
       ));
+
+    // 相册封面和照片数可能变化，失效相册列表缓存。
+    await albumService.invalidateListCache(userId);
   },
 
   // 清理当前用户回收站中的照片文件和数据库记录。
@@ -619,7 +622,7 @@ const photoService = {
     file: File | null,
     key?: string,
     storageId?: string,
-  ): Promise<{ buffer: Uint8Array; name: string; size: number; type: string }> {
+  ): Promise<{ buffer: Uint8Array<ArrayBuffer>; name: string; size: number; type: string }> {
     const trimmedKey = key?.trim();
 
     if (trimmedKey) {
@@ -628,7 +631,9 @@ const photoService = {
       }
 
       const object = await storage.get(trimmedKey, storageId, { as: 'uint8array' });
-      const buffer = object.body as Uint8Array;
+      // 零拷贝视图，把 body 的 buffer 限定为 ArrayBuffer 以满足 Blob 构造要求。
+      const body = object.body as Uint8Array;
+      const buffer = new Uint8Array(body.buffer, body.byteOffset, body.byteLength) as Uint8Array<ArrayBuffer>;
       const name = trimmedKey.split('/').pop() || trimmedKey;
 
       return {

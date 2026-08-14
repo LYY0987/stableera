@@ -1,6 +1,5 @@
 import { clearExpiredCacheTask } from '@/server/task/cache-task';
 import { clearExpiredPhotoTask } from '@/server/task/photo-task';
-import { cleanMemoryCacheTask } from '@/server/task/memory-cache-task';
 
 // 这个模块启动服务端定时任务。
 
@@ -15,7 +14,6 @@ function startTasks() {
   globalForTask.__albumTasksStarted = true;
   clearExpiredPhotoTask();
   clearExpiredCacheTask();
-  cleanMemoryCacheTask();
 }
 
 export { startTasks };
