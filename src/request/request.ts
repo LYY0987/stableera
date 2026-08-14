@@ -67,7 +67,36 @@ async function post<T = unknown>(url: string, params: RequestParams = null) {
   return json.data as T;
 }
 
+// 发送 GET 请求并返回接口 data。
+async function get<T = unknown>(url: string) {
+  await sleep(MOCK_REQUEST_DELAY);
+
+  const res = await fetch(buildUrl(url), {
+    method: 'GET',
+    credentials: 'include'
+  });
+  const json = await res.json() as ApiResponse<T>;
+
+  if (!res.ok || json.code !== 200) {
+    const message = json.message || '请求失败';
+    toast.error(message);
+
+    if (res.status === 401 || json.code === 401) {
+      handleUnauthorized();
+    }
+
+    throw new Error(message);
+  }
+
+  return json.data as T;
+}
+
 const http = {
+  // 发送 GET 请求。
+  get<T = unknown>(url: string) {
+    return get<T>(url);
+  },
+
   // 发送 POST 请求。
   post<T = unknown>(url: string, params: RequestParams = null) {
     return post<T>(url, params);

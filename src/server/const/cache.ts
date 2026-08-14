@@ -2,5 +2,6 @@
 
 const STORAGE_LIST_CACHE_KEY = 'storage-list:'
 const AUTH_CACHE_KEY = 'auth:'
+const CAPTCHA_CACHE_KEY = 'captcha:'
 
-export { STORAGE_LIST_CACHE_KEY, AUTH_CACHE_KEY }
+export { STORAGE_LIST_CACHE_KEY, AUTH_CACHE_KEY, CAPTCHA_CACHE_KEY }

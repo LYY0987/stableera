@@ -4,9 +4,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   reactStrictMode: false,
+  allowedDevOrigins: ['198.18.0.1'],
   // 把应用标题暴露给客户端页面（如登录页）。
   env: {
-    TITLE: process.env.TITLE || "Pixtale",
+    TITLE: process.env.TITLE || "StableEra",
   },
   serverExternalPackages: ['exiftool-vendored', 'better-sqlite3', 'exifr', 'sharp'],
   // Vercel 不用 standalone；Docker 自建部署才需要。

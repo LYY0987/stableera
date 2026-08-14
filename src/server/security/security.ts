@@ -69,7 +69,7 @@ async function security(c: Context, next: Next) {
 
   const path = c.req.path.replace(/^\/api/, '');
 
-  if (path.startsWith('/login') || path.startsWith('/logout')) {
+  if (path.startsWith('/login') || path.startsWith('/logout') || path.startsWith('/captcha')) {
     return next();
   }
 

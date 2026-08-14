@@ -6,6 +6,7 @@ import '../api/storage-api'
 import '../api/user-api'
 import '../api/login-api'
 import '../api/setting-api'
+import '../api/captcha-api'
 
 // 这个模块汇总注册 Web 接口所需的中间件和 API 路由。
 

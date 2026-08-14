@@ -23,7 +23,7 @@ if (!useTurso) {
   fs.mkdirSync(dataDir, { recursive: true })
 }
 
-const db = useTurso ? null : new Database(path.join(dataDir, 'pixtale.sqlite'))
+const db = useTurso ? null : new Database(path.join(dataDir, 'stableera.sqlite'))
 
 const turso = useTurso
   ? createClient({

@@ -11,6 +11,7 @@ import { UserStatusEnum } from '@/server/enums/user-enum';
 import { cache } from '@/server/infra/cache';
 import { AUTH_CACHE_TTL } from '@/server/const/global';
 import { AUTH_CACHE_KEY } from '@/server/const/cache';
+import { captchaService } from '@/server/service/captcha-service';
 
 // 这个模块处理登录认证相关业务。
 
@@ -35,11 +36,18 @@ const loginService = {
     return uuid
   },
 
-  // 校验用户名和密码，登录成功后生成 JWT。
+  // 校验验证码、用户名和密码，登录成功后生成 JWT。
   async login(params: LoginBo): Promise<string> {
 
     if (!params.username?.trim() || !params.password?.trim()) {
       throw new BizError("login.credentialsRequired");
+    }
+
+    // 先校验验证码，避免无效请求继续查库。
+    const isCaptchaValid = await captchaService.verify(params.captchaId, params.captchaCode);
+
+    if (!isCaptchaValid) {
+      throw new BizError("login.invalidCaptcha");
     }
 
     const [user] = await orm.select().from(userTab).where(eq(userTab.username, params.username)).limit(1);

@@ -1,8 +1,8 @@
-# 复制 Next.js standalone 产物到 D:\pixtale\pixtale，并带上外层 node.exe。
+# 复制 Next.js standalone 产物到 D:\stableera\stableera，并带上外层 node.exe。
 
 $Root = Split-Path -Parent $PSScriptRoot
-$Base = "D:\pixtale"
-$Out = Join-Path $Base "pixtale"
+$Base = "D:\stableera"
+$Out = Join-Path $Base "stableera"
 
 if (-not (Test-Path (Join-Path $Root ".next\standalone\server.js"))) {
   throw "Missing .next/standalone/server.js. Run npm run build first."
@@ -46,6 +46,6 @@ function Invoke-CompileLauncher([string]$DestExe) {
   }
 }
 
-Invoke-CompileLauncher (Join-Path $Out "Pixtale.exe")
+Invoke-CompileLauncher (Join-Path $Out "StableEra.exe")
 
 Write-Host "Bundle complete: $Out"

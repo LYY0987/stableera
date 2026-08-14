@@ -12,6 +12,7 @@
   "photo.favoriteRequired": "请选择收藏状态",
   "login.credentialsRequired": "用户名和密码不能为空",
   "login.invalidCredentials": "用户名或密码错误",
+  "login.invalidCaptcha": "验证码错误或已过期",
   "user.disabled": "用户已被禁用",
   "user.usernameRequired": "用户名不能为空",
   "user.avatarInvalid": "头像格式错误",

@@ -1,6 +1,6 @@
 <p align="center">
     <img src="https://img.022335.xyz/logo.png" width="96px" />
-    <h1 align="center">Pixtale</h1>
+    <h1 align="center">StableEra</h1>
     <p align="center"><strong>一个沉浸式瀑布流相册应用🎉</strong></p>
     <p align="center"><a href="README.md">English</a> | <a href="README_ZH.md">简体中文</a></p>
 </p>
@@ -8,7 +8,7 @@
 
 ## 前言
 
-Pixtale 是一个基于Next.js构建的沉浸式瀑布流相册，主要用于个人私有存储照片，支持本地和S3等方式聚合存储，可部署到Docker和Vercel
+StableEra 是一个基于Next.js构建的沉浸式瀑布流相册，主要用于个人私有存储照片，支持本地和S3等方式聚合存储，可部署到Docker和Vercel
 
 ## 项目展示
 
@@ -51,7 +51,7 @@ Pixtale 是一个基于Next.js构建的沉浸式瀑布流相册，主要用于�
 
 ## 许可证
 
-`Pixtale` 是基于 [AGPL-3.0](LICENSE) 许可证的开源软件
+`StableEra` 是基于 [AGPL-3.0](LICENSE) 许可证的开源软件
 
 
 

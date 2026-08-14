@@ -1,13 +1,13 @@
 <p align="center">
     <img src="https://img.022335.xyz/logo.png" width="96px" />
-    <h1 align="center">Pixtale</h1>
+    <h1 align="center">StableEra</h1>
     <p align="center"><strong>An immersive masonry photo gallery 🎉</strong></p>
     <p align="center">English | <a href="README_ZH.md">简体中文</a></p>
 </p>
 
 ## Introduction
 
-Pixtale is an immersive masonry photo gallery built with Next.js for storing personal photos privately. It supports local storage and S3-compatible object storage, and can be deployed with Docker or on Vercel.
+StableEra is an immersive masonry photo gallery built with Next.js for storing personal photos privately. It supports local storage and S3-compatible object storage, and can be deployed with Docker or on Vercel.
 
 ## Preview
 
@@ -49,4 +49,4 @@ Pixtale is an immersive masonry photo gallery built with Next.js for storing per
 
 ## License
 
-`Pixtale` is open-source software licensed under the [AGPL-3.0](LICENSE).
+`StableEra` is open-source software licensed under the [AGPL-3.0](LICENSE).

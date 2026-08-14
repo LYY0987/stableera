@@ -3,6 +3,8 @@
 interface LoginBo {
   username: string;
   password: string;
+  captchaId: string;
+  captchaCode: string;
 }
 
 export type { LoginBo };
