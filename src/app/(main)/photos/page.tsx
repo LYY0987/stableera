@@ -24,10 +24,11 @@ import { PhotoFavoriteEnum } from "@/server/enums/photo-enum"
 import { photoFavorite, photoRecycle, photoSetVisibility } from "@/request/photo"
 import { albumAddPhoto } from "@/request/album"
 import { usePhotoStore } from "@/store/photo-store"
-import { Plus, Search, X } from "lucide-react"
+import { Plus, Search, ImagesIcon, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { PhotoDateDrawer } from "@/components/photo/photo-date-drawer"
 import { PhotoMasonrySkeleton } from "@/components/photo/photo-masonry-skeleton"
+import { EmptyState } from "@/components/common/empty-state"
 import { ScrollToTop } from "@/components/photo/scroll-to-top"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { usePhotoContext } from "./provider"
@@ -254,16 +255,20 @@ export default function Page() {
           </header>
           <div className="px-1 md:pl-1 md:pr-0">
             {isBrowser ? (
-              <PhotoMasonry
-                photos={photos}
-                resetKey={masonryKey}
-                onReachBottom={loadMorePhotos}
-                onPhotoOpen={openPhoto}
-                onPhotoFavorite={changePhotoFavorite}
-                onPhotoDelete={recyclePhotos}
-                onPhotoVisibility={changePhotoVisibility}
-                onAlbumOpen={openAlbumDialog}
-              />
+              photos.length > 0 ? (
+                <PhotoMasonry
+                  photos={photos}
+                  resetKey={masonryKey}
+                  onReachBottom={loadMorePhotos}
+                  onPhotoOpen={openPhoto}
+                  onPhotoFavorite={changePhotoFavorite}
+                  onPhotoDelete={recyclePhotos}
+                  onPhotoVisibility={changePhotoVisibility}
+                  onAlbumOpen={openAlbumDialog}
+                />
+              ) : (
+                <EmptyState icon={ImagesIcon} title={t("emptyTitle")} description={t("emptyDescription")} />
+              )
             ) : (
               <PhotoMasonrySkeleton photos={initialPhotos} />
             )}

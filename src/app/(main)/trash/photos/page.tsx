@@ -26,8 +26,9 @@ import { PhotoStatusEnum } from "@/server/enums/photo-enum"
 import { useTrashPhotoContext } from "./provider"
 import { useApp } from "@/app/(main)/provider"
 import { Button } from "@/components/ui/button"
-import { ArrowLeftIcon, BrushCleaning } from "lucide-react"
+import { ArrowLeftIcon, BrushCleaning, Trash2Icon } from "lucide-react"
 import { PhotoMasonrySkeleton } from "@/components/photo/photo-masonry-skeleton"
+import { EmptyState } from "@/components/common/empty-state"
 import { ScrollToTop } from "@/components/photo/scroll-to-top"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTranslations } from "next-intl"
@@ -191,13 +192,17 @@ export default function Page() {
           </header>
           <div className="px-1 md:pl-1 md:pr-0">
             {isBrowser ? (
-              <PhotoMasonry
-                photos={photos}
-                resetKey={masonryKey}
-                onReachBottom={loadMorePhotos}
-                onPhotoDelete={openDeletePhotos}
-                onPhotoRestore={restorePhotos}
-              />
+              photos.length > 0 ? (
+                <PhotoMasonry
+                  photos={photos}
+                  resetKey={masonryKey}
+                  onReachBottom={loadMorePhotos}
+                  onPhotoDelete={openDeletePhotos}
+                  onPhotoRestore={restorePhotos}
+                />
+              ) : (
+                <EmptyState icon={Trash2Icon} title={t("emptyTitle")} description={t("emptyDescription")} />
+              )
             ) : (
               <PhotoMasonrySkeleton photos={initialPhotos} />
             )}

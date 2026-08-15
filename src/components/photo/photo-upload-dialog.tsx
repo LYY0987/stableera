@@ -32,6 +32,7 @@ import { useApp } from "@/app/(main)/provider"
 import { createPhotoCover } from "@/lib/upload-cover"
 import { useStorageStore } from "@/store/storage-store"
 import { usePhotoStore } from "@/store/photo-store"
+import { useAlbumStore } from "@/store/album-store"
 import { photoCreateUrl, photoExists } from "@/request/photo"
 import { type PhotoAddResultVo } from "@/server/entity/vo/photo"
 import { UserTypeEnum } from "@/server/enums/user-enum"
@@ -165,6 +166,7 @@ function uploadToPresignedUrl(
 export function PhotoUploadDialog() {
   const t = useTranslations("photos.upload")
   const { userInfo } = useApp() // 当前登录用户，用于演示模式前端拦截。
+  const albums = useAlbumStore((state) => state.albums) // 全局相册列表，用于展示上传目标相册名。
   const fileInputRef = useRef<HTMLInputElement>(null) // 文件选择 input，用于触发系统文件选择器。
   const previewsRef = useRef<UploadPreview[]>([]) // 保存照片预览和上传状态列表。
   const uploadQueueRef = useRef<UploadPreview[]>([]) // 保存待上传照片队列，支持上传中继续追加照片。
@@ -182,6 +184,10 @@ export function PhotoUploadDialog() {
   const closeUpload = usePhotoStore((state) => state.closeUpload) // 关闭上传弹窗的方法。
   const addUploadedPhoto = usePhotoStore((state) => state.addUploadedPhoto) // 上传成功后写入照片列表的方法。
   const selectedStorageId = storageId ?? storages[0]?.storageId ?? null
+  // targetAlbumName 保存上传目标相册名称，未指定相册时为 null。
+  const targetAlbumName = uploadAlbumId
+    ? albums.find((album) => album.albumId === uploadAlbumId)?.name ?? null
+    : null
 
   useEffect(() => {
     return () => {
@@ -508,7 +514,8 @@ export function PhotoUploadDialog() {
             className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-left text-xs leading-relaxed text-amber-700 dark:text-amber-400"
           >
             <CircleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
-            <span>{t("publicNotice")}</span>
+            {/* 上传到照片墙时提示默认公开；上传到相册时提示可见性以相册设置为准。 */}
+            <span>{targetAlbumName ? t("albumNotice", { name: targetAlbumName }) : t("publicNotice")}</span>
           </div>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto [scrollbar-width:thin]">

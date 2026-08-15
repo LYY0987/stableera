@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/sidebar"
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
+import { FolderIcon } from "lucide-react"
 import { useAlbumContext } from "./provider"
 import { useApp } from "@/app/(main)/provider"
 import { albumAdd, albumDelete, albumList, albumSetName, albumSetTop, albumSetVisibility } from "@/request/album"
+import { EmptyState } from "@/components/common/empty-state"
 import { type AlbumVo } from "@/server/entity/vo/album"
 import { useTranslations } from "next-intl"
 
@@ -258,15 +260,19 @@ export default function Page() {
             </div>
           </header>
           <div className="px-2 md:pl-3 md:pr-2">
-            <AlbumMasonry
-              albums={albums}
-              resetKey={albumListKey}
-              onAlbumRename={renameAlbum}
-              onAlbumTop={topAlbum}
-              onAlbumVisibility={changeAlbumVisibility}
-              onAlbumShare={shareAlbum}
-              onAlbumDelete={openDeleteAlbum}
-            />
+            {albums.length > 0 ? (
+              <AlbumMasonry
+                albums={albums}
+                resetKey={albumListKey}
+                onAlbumRename={renameAlbum}
+                onAlbumTop={topAlbum}
+                onAlbumVisibility={changeAlbumVisibility}
+                onAlbumShare={shareAlbum}
+                onAlbumDelete={openDeleteAlbum}
+              />
+            ) : (
+              <EmptyState icon={FolderIcon} title={t("empty")} description={t("emptyDescription")} />
+            )}
           </div>
         </SidebarInset>
       </SidebarProvider>
