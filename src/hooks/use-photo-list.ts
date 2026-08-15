@@ -34,7 +34,8 @@ function usePhotoList(params: Partial<PhotoListBo> = {}, pageSize = PHOTO_LIST_P
   const paramsKey = JSON.stringify(params)
   const initialParams = useMemo<Partial<PhotoListBo>>(() => JSON.parse(paramsKey) as Partial<PhotoListBo>, [paramsKey])
   const paramsRef = useRef<Partial<PhotoListBo>>(initialParams) // 保存当前列表请求参数，由显式刷新方法更新。
-  const sortField: PhotoSortField = paramsRef.current.status === PhotoStatusEnum.DELETE ? "recycleTime" : "takenTime"
+  // sortField 标记当前列表排序字段：回收站按回收时间，其余按拍摄时间。
+  const [sortField, setSortField] = useState<PhotoSortField>(initialParams.status === PhotoStatusEnum.DELETE ? "recycleTime" : "takenTime")
   const initialUsedRef = useRef(false) // 标记服务端首屏数据是否已经用于初始化列表。
   const loadingRef = useRef(false) // 标记当前是否正在加载照片列表。
   const photosRef = useRef<PhotoVo[]>(initialPhotos ?? []) // 保存最新照片列表，供游标分页读取最后一张。
@@ -100,6 +101,7 @@ function usePhotoList(params: Partial<PhotoListBo> = {}, pageSize = PHOTO_LIST_P
   const refreshPhotoList = useCallback((nextParams?: Partial<PhotoListBo>) => {
     if (nextParams) {
       paramsRef.current = nextParams
+      setSortField(nextParams.status === PhotoStatusEnum.DELETE ? "recycleTime" : "takenTime")
     }
 
     photosRef.current = []

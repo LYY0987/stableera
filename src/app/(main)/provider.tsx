@@ -51,6 +51,13 @@ function useApp() {
 function Provider({ children, defaultSidebarOpen, initialUserInfo, title }: ProviderProps) {
   // userInfo 保存当前登录用户信息，登录后可立即更新布局展示。
   const [userInfo, setUserInfo] = React.useState<UserInfoVo | null>(initialUserInfo)
+  // prevInitialUserInfo 记录上一次的初始用户信息，用于登录态变化时同步 state。
+  const [prevInitialUserInfo, setPrevInitialUserInfo] = React.useState(initialUserInfo)
+  // 初始用户信息变化时在渲染期同步（登录/退出后刷新布局展示）。
+  if (prevInitialUserInfo !== initialUserInfo) {
+    setPrevInitialUserInfo(initialUserInfo)
+    setUserInfo(initialUserInfo)
+  }
   // sidebarOpen 保存侧边栏当前展开状态，供页面切换后继续复用。
   const [sidebarOpen, setSidebarOpen] = React.useState(defaultSidebarOpen)
   const setAlbums = useAlbumStore((state) => state.setAlbums)
@@ -58,10 +65,6 @@ function Provider({ children, defaultSidebarOpen, initialUserInfo, title }: Prov
   const setInfoOpen = usePhotoStore((state) => state.setInfoOpen)
   // isMobile 判断当前是否为移动端视口。
   const isMobile = useIsMobile()
-
-  useEffect(() => {
-    setUserInfo(initialUserInfo)
-  }, [initialUserInfo])
 
   // 查询正常存储配置并写入全局存储选项。
   useEffect(() => {

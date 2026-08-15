@@ -24,13 +24,13 @@ export function LoginForm({
   ...props
 }: LoginFormProps) {
   const t = useTranslations("login")
-  // form 保存登录表单的用户名、密码和验证码字段。
-  const [form, setForm] = useState<LoginBo>({
-    username: "",
-    password: "",
+  // form 保存登录表单的用户名、密码和验证码字段，配置了演示账号时预填。
+  const [form, setForm] = useState<LoginBo>(() => ({
+    username: process.env.NEXT_PUBLIC_DEMO_USERNAME || "",
+    password: process.env.NEXT_PUBLIC_DEMO_PASSWORD || "",
     captchaId: "",
     captchaCode: "",
-  })
+  }))
   // captchaImage 保存当前验证码图片的 data URL。
   const [captchaImage, setCaptchaImage] = useState("")
   // captchaLoading 标记验证码图片是否正在加载。
@@ -57,21 +57,13 @@ export function LoginForm({
     }
   }, [])
 
-  // 若配置了演示账号，则预填到登录表单，并加载首张验证码。
+  // 首次进入加载一张验证码图片；延迟到下一帧，避免在 effect 中同步更新状态。
   useEffect(() => {
-    const username = process.env.NEXT_PUBLIC_DEMO_USERNAME
-    const password = process.env.NEXT_PUBLIC_DEMO_PASSWORD
+    const timer = setTimeout(() => {
+      void refreshCaptcha()
+    }, 0)
 
-    if (username || password) {
-      setForm((prev) => ({
-        username: username || prev.username,
-        password: password || prev.password,
-        captchaId: prev.captchaId,
-        captchaCode: prev.captchaCode,
-      }))
-    }
-
-    refreshCaptcha()
+    return () => clearTimeout(timer)
   }, [refreshCaptcha])
 
   // 更新登录表单字段。

@@ -82,6 +82,55 @@ function Starfield() {
   return <canvas ref={canvasRef} className="absolute inset-0 z-0 h-full w-full" />
 }
 
+// Logo 圆环组件：ring 顺时针 + 双层文字环绕 + 中心 logo。
+function LogoRing({ title, size = 280 }: { title: string; size?: number }) {
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* 最外层 ring.png 顺时针旋转 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={ringImg.src}
+        alt=""
+        className="absolute inset-0 h-full w-full object-contain animate-spin-clockwise opacity-60"
+        draggable={false}
+      />
+
+      {/* 外层 StableEra 文字环绕，逆时针旋转 */}
+      <svg
+        viewBox="0 0 240 240"
+        className="absolute inset-0 h-full w-full animate-spin-counterclockwise text-cyan-300/70"
+      >
+        <defs>
+          <path
+            id={`text-outer-${size}`}
+            d="M 120,120 m -100,0 a 100,100 0 1,1 200,0 a 100,100 0 1,1 -200,0"
+            fill="none"
+          />
+        </defs>
+        <text
+          fontSize="12"
+          fontWeight="500"
+          letterSpacing="5"
+          fill="currentColor"
+        >
+          <textPath href={`#text-outer-${size}`}>
+            {`StableEra · StableEra · StableEra · StableEra · StableEra · `}
+          </textPath>
+        </text>
+      </svg>
+
+      {/* 中心 logo 圆形显示 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/logo.png"
+        alt={title}
+        className="relative z-10 size-24 rounded-full object-cover shadow-2xl shadow-cyan-500/20 ring-2 ring-cyan-500/20"
+        draggable={false}
+      />
+    </div>
+  )
+}
+
 // 登录页：居中悬浮卡片，左侧 Logo 圆环 + 右侧表单，星空背景 + 装饰图。
 export default function AuthPage() {
   const title = process.env.TITLE || "StableEra"
@@ -134,55 +183,6 @@ export default function AuthPage() {
           // 刷新失败由 http 拦截器统一提示。
         })
       })
-  }
-
-  // Logo 圆环组件：ring 顺时针 + 双层文字环绕 + 中心 logo。
-  function LogoRing({ size = 280 }: { size?: number }) {
-    return (
-      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-        {/* 最外层 ring.png 顺时针旋转 */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={ringImg.src}
-          alt=""
-          className="absolute inset-0 h-full w-full object-contain animate-spin-clockwise opacity-60"
-          draggable={false}
-        />
-
-        {/* 外层 StableEra 文字环绕，逆时针旋转 */}
-        <svg
-          viewBox="0 0 240 240"
-          className="absolute inset-0 h-full w-full animate-spin-counterclockwise text-cyan-300/70"
-        >
-          <defs>
-            <path
-              id={`text-outer-${size}`}
-              d="M 120,120 m -100,0 a 100,100 0 1,1 200,0 a 100,100 0 1,1 -200,0"
-              fill="none"
-            />
-          </defs>
-          <text
-            fontSize="12"
-            fontWeight="500"
-            letterSpacing="5"
-            fill="currentColor"
-          >
-            <textPath href={`#text-outer-${size}`}>
-              {`StableEra · StableEra · StableEra · StableEra · StableEra · `}
-            </textPath>
-          </text>
-        </svg>
-
-        {/* 中心 logo 圆形显示 */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo.png"
-          alt={title}
-          className="relative z-10 size-24 rounded-full object-cover shadow-2xl shadow-cyan-500/20 ring-2 ring-cyan-500/20"
-          draggable={false}
-        />
-      </div>
-    )
   }
 
   // 装饰图配置：src、位置、大小、动画延迟。
@@ -245,7 +245,7 @@ export default function AuthPage() {
 
         {/* 卡片左侧：Logo 圆环（仅桌面端显示） */}
         <div className="hidden items-center justify-center border-r border-cyan-500/10 p-12 md:flex md:w-1/2">
-          <LogoRing size={280} />
+          <LogoRing title={title} size={280} />
         </div>
 
         {/* 卡片右侧：登录表单 */}
