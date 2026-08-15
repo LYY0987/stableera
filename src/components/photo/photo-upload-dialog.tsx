@@ -503,6 +503,13 @@ export function PhotoUploadDialog() {
           <DialogDescription className="sr-only">
             Select photos to upload to the current photo list.
           </DialogDescription>
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-left text-xs leading-relaxed text-amber-700 dark:text-amber-400"
+          >
+            <CircleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>{t("publicNotice")}</span>
+          </div>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto [scrollbar-width:thin]">
           <div className="grid grid-cols-3 content-start gap-1 md:grid-cols-4">

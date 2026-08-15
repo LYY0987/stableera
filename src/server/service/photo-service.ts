@@ -44,7 +44,7 @@ import { FileTypeEnum } from '@/server/enums/file-enum';
 
 const photoService = {
 
-  // 分页查询当前用户照片，并按传入条件和拍摄时间排序。
+  // 分页查询照片：照片墙返回所有用户的公开照片，回收站列表只返回当前用户照片，并按传入条件和拍摄时间排序。
   async list(params: PhotoListBo, userId: string): Promise<PageVo<PhotoVo>> {
 
     const size = params.size && params.size > 0 ? params.size : PHOTO_LIST_PAGE_SIZE;
@@ -55,7 +55,8 @@ const photoService = {
 
     const whereList = [
       eq(photoTab.status, status),
-      eq(photoTab.userId, userId)
+      // 照片墙展示所有用户的公开照片；回收站列表仍只显示当前用户的照片。
+      ...(status === PhotoStatusEnum.DELETE ? [eq(photoTab.userId, userId)] : [])
     ];
 
     if (params.favorite) {
@@ -95,6 +96,8 @@ const photoService = {
         .innerJoin(albumPhotoTab, eq(photoTab.photoId, albumPhotoTab.photoId))
         .where(and(
           ...whereList,
+          // 相册是个人数据，相册内照片始终限定为当前用户自己的照片。
+          eq(photoTab.userId, userId),
           eq(albumPhotoTab.albumId, params.albumId)
         ))
         .orderBy(desc(orderColumn), desc(photoTab.photoId))
@@ -104,9 +107,9 @@ const photoService = {
         .from(photoTab)
         .where(and(
           ...whereList,
-          // 照片墙隐藏私密相册中的照片：状态为正常且未指定相册时排除。
+          // 照片墙展示所有用户的公开照片：状态为正常且未指定相册时，隐藏任意用户私密相册中的照片。
           status === PhotoStatusEnum.NORMAL
-            ? notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery(userId))
+            ? notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery())
             : sql`1=1`
         ))
         .orderBy(desc(orderColumn), desc(photoTab.photoId))
@@ -132,12 +135,11 @@ const photoService = {
     };
   },
 
-  // 按天统计当前用户未删除且有拍摄时间的照片。
+  // 按天统计照片墙中未删除且有拍摄时间的公开照片（相册内仅统计当前用户照片）。
   async takenDateList(params: PhotoTakenDateListBo, userId: string): Promise<PhotoTakenDateVo[]> {
 
     const whereList = [
       eq(photoTab.status, PhotoStatusEnum.NORMAL),
-      eq(photoTab.userId, userId),
       isNotNull(photoTab.takenTime),
     ];
 
@@ -160,6 +162,8 @@ const photoService = {
         .innerJoin(albumPhotoTab, eq(photoTab.photoId, albumPhotoTab.photoId))
         .where(and(
           ...whereList,
+          // 相册是个人数据，日期统计同样只统计当前用户相册中的照片。
+          eq(photoTab.userId, userId),
           eq(albumPhotoTab.albumId, params.albumId)
         ))
         .groupBy(takenDate)
@@ -169,8 +173,8 @@ const photoService = {
         .from(photoTab)
         .where(and(
           ...whereList,
-          // 照片墙日期统计同样隐藏私密相册中的照片。
-          notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery(userId))
+          // 照片墙日期统计展示所有用户的公开照片，隐藏任意用户私密相册中的照片。
+          notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery())
         ))
         .groupBy(takenDate)
         .orderBy(asc(takenDate));
@@ -181,16 +185,13 @@ const photoService = {
     }));
   },
 
-  // 构造子查询：返回当前用户私密相册中所有照片的 photoId。
-  buildPrivateAlbumPhotoIdQuery(userId: string) {
+  // 构造子查询：返回所有用户私密相册中照片的 photoId，照片墙统一排除。
+  buildPrivateAlbumPhotoIdQuery() {
     return orm
       .select({ photoId: albumPhotoTab.photoId })
       .from(albumPhotoTab)
       .innerJoin(albumTab, eq(albumPhotoTab.albumId, albumTab.albumId))
-      .where(and(
-        eq(albumTab.userId, userId),
-        eq(albumTab.visibility, AlbumVisibilityEnum.PRIVATE)
-      ));
+      .where(eq(albumTab.visibility, AlbumVisibilityEnum.PRIVATE));
   },
 
   // 根据原文件名生成存储 key，若 key 已存在则在扩展名前追加时间戳。

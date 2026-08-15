@@ -31,6 +31,7 @@
   "photos.viewer.actions.enterFullscreen": "进入全屏",
   "photos.upload.actions.settings": "上传设置",
   "photos.upload.title": "照片上传",
+  "photos.upload.publicNotice": "上传后照片默认为公开：所有登录用户都能看到你上传的照片。",
   "photos.upload.previewFailed": "{name} 预览生成失败",
   "photos.upload.invalidStorage": "无效存储",
   "photos.upload.demoReadonly": "演示模式禁止操作",
