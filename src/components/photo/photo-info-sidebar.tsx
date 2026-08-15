@@ -1,19 +1,25 @@
 "use client"
 
-import { XIcon } from "lucide-react"
+import { useState, type KeyboardEvent } from "react"
+import { PlusIcon, XIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTapAction } from "@/hooks/use-tap-action"
 import { formatPhotoTakenDateTime } from "@/lib/date"
 import { getThumbHashUrl } from "@/lib/thumb-hash"
 import { formatPhotoLocation, getPhotoColorSpace, getPhotoDeviceParams, getPhotoShootingParams, getPhotoSoftware, getPhotoTimezone } from "@/lib/viewer-field"
+import { photoSetTags } from "@/request/photo"
 import { type PhotoVo } from "@/server/entity/vo/photo"
 import { useLocale, useTranslations } from "next-intl"
 
 type PhotoInfoSidebarProps = {
   // 当前查看的照片。
   photo: PhotoVo | null
+  // 是否照片所有者，所有者可编辑标签。
+  isOwner?: boolean
   // 关闭侧栏。
   onClose?: () => void
 }
@@ -139,8 +145,101 @@ function SidebarCloseButton({ onClose }: { onClose: () => void }) {
   )
 }
 
+// 渲染照片标签区块：所有者可增删标签，其他用户只读。
+function PhotoTagsSection({ photo, isOwner }: { photo: PhotoVo; isOwner?: boolean }) {
+  const t = useTranslations("photos.info")
+  // inputTag 保存新增标签输入框的文本。
+  const [inputTag, setInputTag] = useState("")
+  // saving 标记标签保存中。
+  const [saving, setSaving] = useState(false)
+
+  // 保存标签列表并同步当前照片。
+  function saveTags(tags: string[]) {
+    setSaving(true)
+    photoSetTags({ photoId: photo.photoId, tags })
+      .then(() => {
+        photo.tags = tags
+        toast.success(t("tagsSaved"))
+      })
+      .catch(() => {
+        // 错误已由 http 拦截器统一提示。
+      })
+      .finally(() => setSaving(false))
+  }
+
+  // 新增标签并保存。
+  function addTag() {
+    const tag = inputTag.trim()
+
+    if (!tag || photo.tags.includes(tag)) {
+      setInputTag("")
+      return
+    }
+
+    saveTags([...photo.tags, tag])
+    setInputTag("")
+  }
+
+  // 删除指定标签并保存。
+  function removeTag(tag: string) {
+    saveTags(photo.tags.filter((item) => item !== tag))
+  }
+
+  // 处理输入框回车新增标签。
+  function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      addTag()
+    }
+  }
+
+  return (
+    <div className="px-4 py-3">
+      <div className="mb-2 text-sm font-medium">{t("tags")}</div>
+      {photo.tags.length > 0 ? (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {photo.tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs text-white"
+            >
+              {tag}
+              {isOwner && (
+                <button
+                  type="button"
+                  className="text-white/60 transition-colors hover:text-white"
+                  onClick={() => removeTag(tag)}
+                  aria-label={`Remove tag ${tag}`}
+                >
+                  <XIcon className="size-3" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mb-2 text-xs text-white/50">{t("tagsEmpty")}</p>
+      )}
+      {isOwner && (
+        <div className="flex items-center gap-1.5">
+          <Input
+            value={inputTag}
+            placeholder={t("tagsPlaceholder")}
+            onChange={(event) => setInputTag(event.target.value)}
+            onKeyDown={handleInputKeyDown}
+            disabled={saving}
+            className="h-8 bg-white/10 text-white placeholder:text-white/40"
+          />
+          <Button type="button" size="icon-sm" variant="secondary" onClick={addTag} disabled={saving || !inputTag.trim()} aria-label={t("tagsAdd")}>
+            <PlusIcon className="size-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // 渲染照片信息侧栏，固定在 Lightbox 右侧。
-export function PhotoInfoSidebar({ photo, onClose }: PhotoInfoSidebarProps) {
+export function PhotoInfoSidebar({ photo, isOwner = false, onClose }: PhotoInfoSidebarProps) {
   const t = useTranslations("photos.info")
   const storageT = useTranslations("storage")
   const locale = useLocale()
@@ -170,6 +269,7 @@ export function PhotoInfoSidebar({ photo, onClose }: PhotoInfoSidebarProps) {
             <PhotoInfoRow label={t("software")} value={getPhotoSoftware(photo.exif)} wrap />
             <PhotoInfoRow label={t("storage")} value={formatStorageLocation(photo, storageT)} />
           </div>
+          <PhotoTagsSection photo={photo} isOwner={isOwner} />
           {shootingParams.length > 0 && (
             <>
               <div className="px-4 pt-3 text-sm font-medium">{t("cameraSettings")}</div>

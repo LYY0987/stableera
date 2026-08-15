@@ -140,6 +140,13 @@ const createTableSqlList = [
         expires_at TEXT,
         create_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
     )`,
+
+  `CREATE TABLE IF NOT EXISTS photo_tag (
+        photo_id TEXT NOT NULL,
+        tag TEXT NOT NULL,
+        PRIMARY KEY (photo_id, tag)
+    )`,
+  `CREATE INDEX IF NOT EXISTS idx_photo_tag_tag ON photo_tag (tag)`,
 ];
 
 // 执行全部建表语句，已存在的表会自动跳过。

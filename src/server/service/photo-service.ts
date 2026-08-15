@@ -14,6 +14,7 @@ import {
   type PhotoListBo,
   type PhotoRecycleBo,
   type PhotoRestoreBo,
+  type PhotoSetTagsBo,
   type PhotoSetVisibilityBo,
   type PhotoTakenDateListBo,
 } from '@/server/entity/bo/photo';
@@ -22,7 +23,7 @@ import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
 import { PhotoFavoriteEnum, PhotoStatusEnum, PhotoVisibilityEnum } from '@/server/enums/photo-enum';
 import { StorageTypeOptions } from '@/server/enums/storage-enum';
 import { type PageVo } from '@/server/entity/vo/common';
-import { type PhotoAddResultVo, type PhotoCreateUrlVo, type PhotoExistsVo, type PhotoTakenDateVo, type PhotoVo } from '@/server/entity/vo/photo';
+import { type PhotoAddResultVo, type PhotoCreateUrlVo, type PhotoExistsVo, type PhotoTagVo, type PhotoTakenDateVo, type PhotoVo } from '@/server/entity/vo/photo';
 import { type Storage } from '@/server/entity/storage';
 import { storageService } from '@/server/service/storage-service';
 import { buildContentDisposition, formatFileTimestamp, splitFileName } from '@/server/lib/file';
@@ -39,6 +40,7 @@ import { exifService } from '@/server/service/exif-service';
 import { buildPhotoKey, buildPreviewKey, buildThumbnailKey } from '@/server/lib/photo-path';
 import { type File as PhotoFile, fileTab } from '@/server/entity/file';
 import { userFavoriteTab } from '@/server/entity/user-favorite';
+import { photoTagTab } from '@/server/entity/photo-tag';
 import { userTab } from '@/server/entity/user';
 import { fileService } from '@/server/service/file-service';
 import { FileTypeEnum } from '@/server/enums/file-enum';
@@ -76,7 +78,20 @@ const photoService = {
     }
 
     if (params.keyword?.trim()) {
-      whereList.push(like(photoTab.name, `%${params.keyword.trim()}%`));
+      // 关键词匹配文件名或标签。
+      const keywordValue = params.keyword.trim();
+      const tagPhotoIdQuery = orm
+        .select({ photoId: photoTagTab.photoId })
+        .from(photoTagTab)
+        .where(like(photoTagTab.tag, `%${keywordValue}%`));
+      const keywordOr = or(
+        like(photoTab.name, `%${keywordValue}%`),
+        inArray(photoTab.photoId, tagPhotoIdQuery)
+      );
+
+      if (keywordOr) {
+        whereList.push(keywordOr);
+      }
     }
 
     if (params.cursorPhotoId && params.cursorTime) {
@@ -127,11 +142,12 @@ const photoService = {
 
     const fileStorageList = await storageService.getStorageList();
     const photoIds = list.map((photo) => photo.photoId);
-    const [exifMap, fileMap, favoritePhotoIds, uploaderMap] = await Promise.all([
+    const [exifMap, fileMap, favoritePhotoIds, uploaderMap, tagMap] = await Promise.all([
       exifService.listByPhotoIds(photoIds),
       fileService.listByPhotoIds(photoIds),
       this.listUserFavoritePhotoIds(photoIds, userId),
       this.listUploaders(list.map((photo) => photo.userId)),
+      this.listTagsByPhotoIds(photoIds),
     ]);
 
     const result = list.map((photo) => {
@@ -143,6 +159,8 @@ const photoService = {
       vo.favorite = favoritePhotoIds.has(photo.photoId) ? PhotoFavoriteEnum.YES : PhotoFavoriteEnum.NO;
       // 上传者信息用于照片墙作者标识。
       vo.uploader = uploaderMap.get(photo.userId) ?? null;
+      // 照片标签。
+      vo.tags = tagMap.get(photo.photoId) ?? [];
 
       return vo;
     });
@@ -282,6 +300,87 @@ const photoService = {
         eq(photoTab.userId, userId),
         inArray(photoTab.photoId, params.photoIds)
       ));
+  },
+
+  // 查询指定照片集合的标签，返回 photoId 到标签列表的映射。
+  async listTagsByPhotoIds(photoIds: string[]): Promise<Map<string, string[]>> {
+    if (!photoIds.length) {
+      return new Map();
+    }
+
+    const rows = await orm
+      .select({
+        photoId: photoTagTab.photoId,
+        tag: photoTagTab.tag
+      })
+      .from(photoTagTab)
+      .where(inArray(photoTagTab.photoId, photoIds));
+
+    const tagMap = new Map<string, string[]>();
+
+    for (const row of rows) {
+      const tags = tagMap.get(row.photoId) ?? [];
+      tags.push(row.tag);
+      tagMap.set(row.photoId, tags);
+    }
+
+    return tagMap;
+  },
+
+  // 统计全部标签及对应照片数量，按数量倒序。
+  async listTags(): Promise<PhotoTagVo[]> {
+    const rows = await orm
+      .select({
+        tag: photoTagTab.tag,
+        count: count(photoTagTab.photoId)
+      })
+      .from(photoTagTab)
+      .groupBy(photoTagTab.tag)
+      .orderBy(desc(count(photoTagTab.photoId)), asc(photoTagTab.tag));
+
+    return rows.map((row) => ({
+      tag: row.tag,
+      count: Number(row.count),
+    }));
+  },
+
+  // 整体替换当前用户指定照片的标签，仅照片所有者可操作。
+  async setTags(params: PhotoSetTagsBo, userId: string): Promise<void> {
+    const photoId = params.photoId?.trim();
+
+    if (!photoId) {
+      throw new BizError('photo.selectRequired');
+    }
+
+    const [photo] = await orm
+      .select({ photoId: photoTab.photoId })
+      .from(photoTab)
+      .where(and(
+        eq(photoTab.photoId, photoId),
+        eq(photoTab.userId, userId)
+      ))
+      .limit(1);
+
+    if (!photo) {
+      return;
+    }
+
+    // 去重、去空、限制标签数量后整体替换。
+    const tags = Array.from(new Set(
+      (params.tags ?? [])
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    )).slice(0, 20);
+
+    await orm.transaction(async (tx) => {
+      await tx.delete(photoTagTab)
+        .where(eq(photoTagTab.photoId, photoId));
+
+      if (tags.length) {
+        await tx.insert(photoTagTab)
+          .values(tags.map((tag) => ({ photoId, tag })));
+      }
+    });
   },
 
   // 根据原文件名生成存储 key，若 key 已存在则在扩展名前追加时间戳。
@@ -603,6 +702,9 @@ const photoService = {
     await orm.delete(userFavoriteTab)
       .where(inArray(userFavoriteTab.photoId, photoIds));
 
+    await orm.delete(photoTagTab)
+      .where(inArray(photoTagTab.photoId, photoIds));
+
     await fileService.deleteByPhotoIds(photoIds);
 
     await orm.delete(photoTab)
@@ -688,6 +790,9 @@ const photoService = {
       await orm.delete(userFavoriteTab)
         .where(inArray(userFavoriteTab.photoId, photoIds));
 
+      await orm.delete(photoTagTab)
+        .where(inArray(photoTagTab.photoId, photoIds));
+
       await fileService.deleteByPhotoIds(photoIds);
 
       await orm.delete(photoTab)
@@ -723,7 +828,8 @@ const photoService = {
         ? StorageTypeOptions.find((item) => item.value === fileStorage.type)?.label ?? null
         : null,
       // 上传者信息由列表查询按需填充，其余场景默认为空。
-      uploader: null
+      uploader: null,
+      tags: []
     };
   },
 

@@ -20,10 +20,17 @@ type PhotoVo = Photo & {
   storageName: string | null;
   storageTypeDesc: string | null;
   uploader: PhotoUploaderVo | null;
+  tags: string[];
 };
 
 interface PhotoTakenDateVo {
   date: string;
+  count: number;
+}
+
+// 标签统计返回对象。
+interface PhotoTagVo {
+  tag: string;
   count: number;
 }
 
@@ -43,4 +50,4 @@ interface PhotoCreateUrlVo {
   key: string;
 }
 
-export type { PhotoUploaderVo, PhotoVo, PhotoTakenDateVo, PhotoAddResultVo, PhotoExistsVo, PhotoCreateUrlVo };
+export type { PhotoUploaderVo, PhotoVo, PhotoTakenDateVo, PhotoTagVo, PhotoAddResultVo, PhotoExistsVo, PhotoCreateUrlVo };

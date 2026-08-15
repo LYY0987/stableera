@@ -50,6 +50,12 @@ interface PhotoSetVisibilityBo {
   visibility: number;
 }
 
+interface PhotoSetTagsBo {
+  photoId: string;
+  // 标签名列表，保存时会整体替换该照片的标签。
+  tags: string[];
+}
+
 interface PhotoCreateUrlBo {
   // 前端传入的原始文件名。
   fileName: string;
@@ -59,5 +65,5 @@ interface PhotoCreateUrlBo {
   contentType?: string;
 }
 
-export type { PhotoCreateUrlBo, PhotoDeleteBo, PhotoExistsBo, PhotoFavoriteBo, PhotoListBo, PhotoRecycleBo, PhotoRestoreBo, PhotoSetVisibilityBo, PhotoTakenDateListBo };
+export type { PhotoCreateUrlBo, PhotoDeleteBo, PhotoExistsBo, PhotoFavoriteBo, PhotoListBo, PhotoRecycleBo, PhotoRestoreBo, PhotoSetTagsBo, PhotoSetVisibilityBo, PhotoTakenDateListBo };
 
