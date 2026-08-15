@@ -4,9 +4,6 @@ import { useLayoutEffect, useRef, useState, useEffect } from "react"
 import { useRouter, useServerInsertedHTML } from "next/navigation"
 import { useTheme, type Theme } from "@/app/provider"
 import { LoginForm } from "@/components/login/login-form"
-import { login } from "@/request/login"
-import { getCaptcha } from "@/request/captcha"
-import { type LoginBo } from "@/server/entity/bo/login"
 import { useTranslations } from "next-intl"
 import ringImg from "@/assets/ring.png"
 import s2Img from "@/assets/s2.png"
@@ -135,8 +132,6 @@ function LogoRing({ title, size = 280 }: { title: string; size?: number }) {
 export default function AuthPage() {
   const title = process.env.TITLE || "StableEra"
   const t = useTranslations("login")
-  // loading 标记登录请求是否正在提交。
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   // previousTheme 保存进入登录页前的主题，离开时恢复。
@@ -168,21 +163,9 @@ export default function AuthPage() {
     }
   }, [setTheme])
 
-  // 请求登录接口，成功后跳转照片页面，失败时刷新验证码。
-  function handleLogin(params: LoginBo) {
-    setLoading(true)
-
-    login(params)
-      .then(() => {
-        router.replace("/photos")
-      })
-      .catch(() => {
-        setLoading(false)
-        // 登录失败时主动刷新验证码，避免使用过期验证码再次提交。
-        getCaptcha().catch(() => {
-          // 刷新失败由 http 拦截器统一提示。
-        })
-      })
+  // 登录成功后跳转照片页面。
+  function handleLoginSuccess() {
+    router.replace("/photos")
   }
 
   // 装饰图配置：src、位置、大小、动画延迟。
@@ -256,7 +239,7 @@ export default function AuthPage() {
             <p className="text-sm text-slate-400">{t("description")}</p>
           </div>
 
-          <LoginForm title={title} loading={loading} onLogin={handleLogin} />
+          <LoginForm title={title} onLoginSuccess={handleLoginSuccess} />
         </div>
       </div>
     </div>

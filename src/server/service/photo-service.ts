@@ -69,6 +69,14 @@ const photoService = {
       whereList.push(inArray(photoTab.photoId, this.buildUserFavoritePhotoIdQuery(userId)));
     }
 
+    if (params.visibility === PhotoVisibilityEnum.PRIVATE) {
+      // 私密照片专区：仅返回当前用户自己标记为私密的照片。
+      whereList.push(
+        eq(photoTab.userId, userId),
+        eq(photoTab.visibility, PhotoVisibilityEnum.PRIVATE)
+      );
+    }
+
     if (params.startTakenTime) {
       whereList.push(gte(photoTab.takenTime, params.startTakenTime));
     }

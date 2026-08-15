@@ -7,20 +7,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { type LoginBo } from "@/server/entity/bo/login"
 import { useTranslations } from "next-intl"
+import { login } from "@/request/login"
 import { getCaptcha } from "@/request/captcha"
 import s6Img from "@/assets/s6.png"
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
   title: string
-  loading?: boolean
-  onLogin: (params: LoginBo) => void
+  // 登录成功后跳转。
+  onLoginSuccess: () => void
 }
 
 export function LoginForm({
   className,
   title,
-  loading = false,
-  onLogin,
+  onLoginSuccess,
   ...props
 }: LoginFormProps) {
   const t = useTranslations("login")
@@ -35,6 +35,8 @@ export function LoginForm({
   const [captchaImage, setCaptchaImage] = useState("")
   // captchaLoading 标记验证码图片是否正在加载。
   const [captchaLoading, setCaptchaLoading] = useState(false)
+  // submitting 标记登录请求是否正在提交。
+  const [submitting, setSubmitting] = useState(false)
   // refreshLockRef 防止验证码刷新被重复触发。
   const refreshLockRef = useRef(false)
 
@@ -77,16 +79,25 @@ export function LoginForm({
   // canSubmit 判断表单是否填写完整，控制登录按钮的禁用状态。
   const canSubmit = form.username.trim() !== "" && form.password !== "" && form.captchaCode.trim() !== ""
 
-  // 提交登录表单，把用户名、密码和验证码传给登录页面。
-  function submitLogin(event: FormEvent<HTMLFormElement>) {
+  // 提交登录表单：成功后跳转，失败（验证码错误/账号密码错误等）自动刷新验证码。
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setSubmitting(true)
 
-    onLogin({
-      username: form.username.trim(),
-      password: form.password,
-      captchaId: form.captchaId,
-      captchaCode: form.captchaCode.trim(),
-    })
+    try {
+      await login({
+        username: form.username.trim(),
+        password: form.password,
+        captchaId: form.captchaId,
+        captchaCode: form.captchaCode.trim(),
+      })
+      onLoginSuccess()
+    } catch {
+      // 登录失败后刷新验证码，避免旧验证码已被服务端作废而反复失败。
+      await refreshCaptcha()
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -165,7 +176,7 @@ export function LoginForm({
         {/* 提交按钮：s6 图片背景 + 青色遮罩 + 悬停上浮 */}
         <Button
           type="submit"
-          disabled={loading || !canSubmit}
+          disabled={submitting || !canSubmit}
           className="relative mt-2 h-12 gap-2 overflow-hidden rounded-xl text-base font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-xl hover:shadow-cyan-500/40 hover:brightness-110 disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:hover:brightness-100"
           style={{
             backgroundImage: `linear-gradient(to right, rgba(34,211,238,0.85), rgba(20,184,166,0.85)), url(${s6Img.src})`,
@@ -173,7 +184,7 @@ export function LoginForm({
             backgroundPosition: "center",
           }}
         >
-          {loading && <LoaderCircle className="size-4 animate-spin" />}
+          {submitting && <LoaderCircle className="size-4 animate-spin" />}
           {t("signIn")}
         </Button>
       </form>
