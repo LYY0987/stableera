@@ -27,11 +27,12 @@ import { photoFavorite, photoRecycle, photoSetVisibility } from "@/request/photo
 import { albumAddPhoto, albumRemovePhoto } from "@/request/album"
 import { useAlbumStore } from "@/store/album-store"
 import { usePhotoStore } from "@/store/photo-store"
-import { ArrowLeftIcon, PlusIcon } from "lucide-react"
+import { ArrowLeftIcon, ImageIcon, PlusIcon } from "lucide-react"
 import { useAlbumPhotoContext } from "./provider"
 import { useApp } from "@/app/(main)/provider"
 import { PhotoDateDrawer } from "@/components/photo/photo-date-drawer"
 import { PhotoMasonrySkeleton } from "@/components/photo/photo-masonry-skeleton"
+import { EmptyState } from "@/components/common/empty-state"
 import { ScrollToTop } from "@/components/photo/scroll-to-top"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -241,17 +242,21 @@ export default function Page() {
           </header>
           <div className="px-1 md:pl-1 md:pr-0">
             {isBrowser ? (
-              <PhotoMasonry
-                photos={photos}
-                resetKey={masonryKey}
-                onReachBottom={loadMorePhotos}
-                onPhotoOpen={openPhoto}
-                onPhotoFavorite={changePhotoFavorite}
-                onPhotoDelete={recyclePhotos}
-                onPhotoVisibility={changePhotoVisibility}
-                onAlbumOpen={openAlbumDialog}
-                onAlbumRemove={removeAlbumPhotos}
-              />
+              photos.length > 0 ? (
+                <PhotoMasonry
+                  photos={photos}
+                  resetKey={masonryKey}
+                  onReachBottom={loadMorePhotos}
+                  onPhotoOpen={openPhoto}
+                  onPhotoFavorite={changePhotoFavorite}
+                  onPhotoDelete={recyclePhotos}
+                  onPhotoVisibility={changePhotoVisibility}
+                  onAlbumOpen={openAlbumDialog}
+                  onAlbumRemove={removeAlbumPhotos}
+                />
+              ) : (
+                <EmptyState icon={ImageIcon} title={t("emptyPhotosTitle")} description={t("emptyPhotosDescription")} />
+              )
             ) : (
               <PhotoMasonrySkeleton photos={initialPhotos} />
             )}

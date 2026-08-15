@@ -26,6 +26,8 @@ import { useFavoriteContext } from "./provider"
 import { useApp } from "@/app/(main)/provider"
 import { PhotoDateDrawer } from "@/components/photo/photo-date-drawer"
 import { PhotoMasonrySkeleton } from "@/components/photo/photo-masonry-skeleton"
+import { EmptyState } from "@/components/common/empty-state"
+import { HeartIcon } from "lucide-react"
 import { ScrollToTop } from "@/components/photo/scroll-to-top"
 import { useTranslations } from "next-intl"
 
@@ -164,16 +166,20 @@ export default function Page() {
           </header>
           <div className="px-1 md:pl-1 md:pr-0">
             {isBrowser ? (
-              <PhotoMasonry
-                photos={photos}
-                resetKey={masonryKey}
-                onReachBottom={loadMorePhotos}
-                onPhotoOpen={openPhoto}
-                onPhotoFavorite={changePhotoFavorite}
-                onPhotoDelete={recyclePhotos}
-                onPhotoVisibility={changePhotoVisibility}
-                onAlbumOpen={openAlbumDialog}
-              />
+              photos.length > 0 ? (
+                <PhotoMasonry
+                  photos={photos}
+                  resetKey={masonryKey}
+                  onReachBottom={loadMorePhotos}
+                  onPhotoOpen={openPhoto}
+                  onPhotoFavorite={changePhotoFavorite}
+                  onPhotoDelete={recyclePhotos}
+                  onPhotoVisibility={changePhotoVisibility}
+                  onAlbumOpen={openAlbumDialog}
+                />
+              ) : (
+                <EmptyState icon={HeartIcon} title={t("emptyTitle")} description={t("emptyDescription")} />
+              )
             ) : (
               <PhotoMasonrySkeleton photos={initialPhotos} />
             )}
