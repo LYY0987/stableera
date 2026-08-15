@@ -104,7 +104,8 @@ media.get('*', async (c: Context, next: Next) => {
   const disposition = photoFile.type === FileTypeEnum.ORIGINAL ? buildContentDisposition(photoFile.name) : null;
   const headers: Record<string, string> = {
     'Content-Type': photoFile.fileType,
-    'Cache-Control': 'private, max-age=604800',
+    // 照片墙公开后媒体可被共享缓存（CDN/浏览器）复用，加快他人重复访问。
+    'Cache-Control': 'public, max-age=604800',
     'Content-Length': String(obj.size)
   };
 
