@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Dialog } from "@/components/common/dialog"
@@ -29,11 +29,13 @@ export function AlbumSelectDialog({ open, onOpenChange, onAlbumSelect }: AlbumSe
   const [selectedAlbumIds, setSelectedAlbumIds] = useState<string[]>([])
 
   // 关闭弹框后清空已选相册。
-  useEffect(() => {
-    if (!open) {
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
       setSelectedAlbumIds([])
     }
-  }, [open])
+
+    onOpenChange(nextOpen)
+  }
 
   // 切换当前多选相册。
   function changeAlbum(albumId: string) {
@@ -63,7 +65,7 @@ export function AlbumSelectDialog({ open, onOpenChange, onAlbumSelect }: AlbumSe
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={t("addPhotosTitle")}
       showCloseButton={false}
       onConfirm={saveAlbum}

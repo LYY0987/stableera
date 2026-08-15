@@ -84,7 +84,8 @@ export async function verifyIndexes(): Promise<{ created: number; missing: strin
   ];
 
   try {
-    const result = db.prepare('SELECT name FROM sqlite_master WHERE type="index"').all() as Array<{ name: string }>;
+    // SQLite 中字符串字面量必须用单引号，双引号会被解析为列名。
+    const result = db.prepare("SELECT name FROM sqlite_master WHERE type='index'").all() as Array<{ name: string }>;
     const existingIndexes = new Set(result.map(r => r.name));
 
     const missing = requiredIndexes.filter(idx => !existingIndexes.has(idx));

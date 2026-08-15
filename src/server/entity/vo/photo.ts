@@ -2,6 +2,13 @@
 
 import { type Photo } from '@/server/entity/photo';
 
+// 照片上传者基础信息，用于照片墙展示作者标识。
+type PhotoUploaderVo = {
+  userId: string;
+  username: string;
+  avatar: string;
+};
+
 type PhotoVo = Photo & {
   key: string;
   preview: string;
@@ -12,10 +19,18 @@ type PhotoVo = Photo & {
   altitude: number | null;
   storageName: string | null;
   storageTypeDesc: string | null;
+  uploader: PhotoUploaderVo | null;
+  tags: string[];
 };
 
 interface PhotoTakenDateVo {
   date: string;
+  count: number;
+}
+
+// 标签统计返回对象。
+interface PhotoTagVo {
+  tag: string;
   count: number;
 }
 
@@ -35,4 +50,4 @@ interface PhotoCreateUrlVo {
   key: string;
 }
 
-export type { PhotoVo, PhotoTakenDateVo, PhotoAddResultVo, PhotoExistsVo, PhotoCreateUrlVo };
+export type { PhotoUploaderVo, PhotoVo, PhotoTakenDateVo, PhotoTagVo, PhotoAddResultVo, PhotoExistsVo, PhotoCreateUrlVo };

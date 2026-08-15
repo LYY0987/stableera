@@ -1,7 +1,7 @@
 import { http } from "@/request/request";
-import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoTakenDateListBo } from "@/server/entity/bo/photo";
+import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoSetTagsBo, type PhotoSetVisibilityBo, type PhotoTakenDateListBo } from "@/server/entity/bo/photo";
 import { type PageVo } from "@/server/entity/vo/common";
-import { type PhotoAddResultVo, type PhotoCreateUrlVo, type PhotoExistsVo, type PhotoTakenDateVo, type PhotoVo } from "@/server/entity/vo/photo";
+import { type PhotoAddResultVo, type PhotoCreateUrlVo, type PhotoExistsVo, type PhotoTagVo, type PhotoTakenDateVo, type PhotoVo } from "@/server/entity/vo/photo";
 // 这个模块封装照片相关接口请求。
 
 // 分页按条件查询照片列表。
@@ -37,6 +37,21 @@ export function photoRecycle(params: PhotoRecycleBo) {
 // 设置照片收藏状态。
 export function photoFavorite(params: PhotoFavoriteBo) {
   return http.post<void>('/photo/favorite', params);
+}
+
+// 设置照片可见性（公开/私密）。
+export function photoSetVisibility(params: PhotoSetVisibilityBo) {
+  return http.post<void>('/photo/setVisibility', params);
+}
+
+// 整体替换照片标签。
+export function photoSetTags(params: PhotoSetTagsBo) {
+  return http.post<void>('/photo/setTags', params);
+}
+
+// 统计全部标签及照片数量。
+export function photoTags() {
+  return http.post<PhotoTagVo[]>('/photo/tags');
 }
 
 // 恢复回收站照片。

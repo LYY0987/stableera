@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from "next/navigation"
 
+// 首页直接跳转到照片墙。
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main>
-        Home
-      </main>
-    </div>
-  );
+  redirect("/photos")
 }

@@ -14,6 +14,7 @@ import { useImagePreload } from "@/hooks/use-image-preload"
 import { PhotoCard } from "@/components/photo/photo-card"
 import { PhotoSelectionDrawer } from "@/components/photo/photo-selection-drawer"
 import { type PhotoVo } from "@/server/entity/vo/photo"
+import { PhotoVisibilityEnum } from "@/server/enums/photo-enum"
 
 interface PhotoMasonryProps {
   photos: PhotoVo[]
@@ -23,6 +24,7 @@ interface PhotoMasonryProps {
   onPhotoFavorite?: (index: number, setFavorite: (favorite: boolean) => void) => void
   onPhotoDelete?: (photoIds: string[]) => void
   onPhotoRestore?: (photoIds: string[]) => void
+  onPhotoVisibility?: (photoIds: string[], visibility: number) => void
   onAlbumOpen?: (photoIds: string[]) => void
   onAlbumRemove?: (photoIds: string[]) => void
 }
@@ -83,10 +85,13 @@ const PhotoMasonry = memo(function PhotoMasonry({
   onPhotoFavorite,
   onPhotoDelete,
   onPhotoRestore,
+  onPhotoVisibility,
   onAlbumOpen,
   onAlbumRemove,
 }: PhotoMasonryProps) {
-  const { sidebarOpen } = useApp()
+  const { sidebarOpen, userInfo } = useApp()
+  // currentUserId 标记当前登录用户，照片墙中只有本人照片可以管理（删除/加入相册等）。
+  const currentUserId = userInfo?.userId
   // isMobile 判断当前是否为移动端视口。
   const isMobile = useIsMobile()
   // 预加载 hook
@@ -121,6 +126,10 @@ const PhotoMasonry = memo(function PhotoMasonry({
 
   syncPhotoPositioner(photos, positioner.columnWidth, positioner)
   const visibleSelectedPhotoIds = selectedPhotoIds.filter((photoId) => photos.some((photo) => photo.photoId === photoId))
+  // 批量管理操作只作用于当前用户自己的照片，其他人的公开照片仅可查看。
+  const ownedSelectedPhotoIds = visibleSelectedPhotoIds.filter((photoId) => (
+    photos.find((photo) => photo.photoId === photoId)?.userId === currentUserId
+  ))
 
 
   useEffect(() => {
@@ -317,30 +326,42 @@ const PhotoMasonry = memo(function PhotoMasonry({
     })
   }
 
-  // 清空选中状态后把当前选中的照片 id 传给页面删除。
+  // 清空选中状态后把当前选中的本人照片 id 传给页面删除。
   function deleteSelectedPhotos() {
-    const photoIds = visibleSelectedPhotoIds
+    const photoIds = ownedSelectedPhotoIds
     clearSelectedPhotos()
     onPhotoDelete?.(photoIds)
   }
 
-  // 把当前选中的照片 id 传给页面恢复。
+  // 把当前选中的本人照片 id 传给页面恢复。
   function restoreSelectedPhotos() {
-    onPhotoRestore?.(visibleSelectedPhotoIds)
+    onPhotoRestore?.(ownedSelectedPhotoIds)
     clearSelectedPhotos()
   }
 
-  // 把当前选中的照片 id 传给页面打开相册选择。
+  // 把当前选中的本人照片 id 传给页面打开相册选择。
   function openAlbumDialog() {
-    onAlbumOpen?.(visibleSelectedPhotoIds)
+    onAlbumOpen?.(ownedSelectedPhotoIds)
     clearSelectedPhotos()
   }
 
-  // 清空选中状态后把当前选中的照片 id 传给页面移出相册。
+  // 清空选中状态后把当前选中的本人照片 id 传给页面移出相册。
   function removeAlbumPhotos() {
-    const photoIds = visibleSelectedPhotoIds
+    const photoIds = ownedSelectedPhotoIds
     clearSelectedPhotos()
     onAlbumRemove?.(photoIds)
+  }
+
+  // 批量切换选中本人照片的可见性：全部私密时改为公开，否则改为私密。
+  function toggleSelectedVisibility() {
+    const photoIds = ownedSelectedPhotoIds
+    const allPrivate = photoIds.length > 0 && photoIds.every((photoId) => (
+      photos.find((photo) => photo.photoId === photoId)?.visibility === PhotoVisibilityEnum.PRIVATE
+    ))
+    const target = allPrivate ? PhotoVisibilityEnum.PUBLIC : PhotoVisibilityEnum.PRIVATE
+
+    clearSelectedPhotos()
+    onPhotoVisibility?.(photoIds, target)
   }
 
   return (
@@ -348,11 +369,17 @@ const PhotoMasonry = memo(function PhotoMasonry({
       <PhotoSelectionDrawer
         open={visibleSelectedPhotoIds.length > 0}
         onClose={clearSelectedPhotos}
-        onDelete={deleteSelectedPhotos}
+        onDelete={ownedSelectedPhotoIds.length > 0 ? deleteSelectedPhotos : undefined}
         onSelectAll={selectFirstPhotos}
         onRestore={onPhotoRestore ? restoreSelectedPhotos : undefined}
-        onAlbumOpen={onAlbumOpen ? openAlbumDialog : undefined}
-        onAlbumRemove={onAlbumRemove ? removeAlbumPhotos : undefined}
+        visibilityTarget={onPhotoVisibility && ownedSelectedPhotoIds.length > 0
+          ? ownedSelectedPhotoIds.every((photoId) => photos.find((photo) => photo.photoId === photoId)?.visibility === PhotoVisibilityEnum.PRIVATE)
+            ? PhotoVisibilityEnum.PUBLIC
+            : PhotoVisibilityEnum.PRIVATE
+          : undefined}
+        onVisibilityToggle={onPhotoVisibility && ownedSelectedPhotoIds.length > 0 ? toggleSelectedVisibility : undefined}
+        onAlbumOpen={onAlbumOpen && ownedSelectedPhotoIds.length > 0 ? openAlbumDialog : undefined}
+        onAlbumRemove={onAlbumRemove && ownedSelectedPhotoIds.length > 0 ? removeAlbumPhotos : undefined}
       />
       <div ref={wrapRef} className="w-full overflow-x-hidden">
         <MasonryScroller

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontalIcon } from "lucide-react"
+import { MoreHorizontalIcon, Share2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
@@ -18,16 +18,18 @@ interface AlbumActionMenuProps {
   onRename: () => void
   onTop: () => void
   onVisibility: () => void
+  onShare: () => void
   onDelete: () => void
 }
 
 // 渲染相册卡片右上角的更多操作菜单。
-export function AlbumActionMenu({ 
-  shadow = true, 
-  onRename, 
-  onTop, 
-  onVisibility, 
-  onDelete 
+export function AlbumActionMenu({
+  shadow = true,
+  onRename,
+  onTop,
+  onVisibility,
+  onShare,
+  onDelete,
 }: AlbumActionMenuProps) {
   const t = useTranslations("albums")
   // open 记录当前下拉菜单是否打开，用于打开时隐藏图标阴影。
@@ -57,6 +59,10 @@ export function AlbumActionMenu({
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={onVisibility}>
           {t("actions.visibility")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onShare}>
+          <Share2Icon className="size-4" />
+          {t("actions.share")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={onTop}>
           {t("actions.pin")}

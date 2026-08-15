@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { getThumbHashUrl } from "@/lib/thumb-hash"
 import { type PhotoVo } from "@/server/entity/vo/photo"
 import { usePhotoStore } from "@/store/photo-store"
+import { useApp } from "@/app/(main)/provider"
 import { useTranslations } from "next-intl"
 
 interface PhotoViewerProps {
@@ -360,10 +361,6 @@ function FullscreenButton({
 }) {
   const t = useTranslations("photos.viewer.actions")
 
-  if (fullscreen) {
-    return null
-  }
-
   // 进入全屏状态后隐藏查看器操作按钮。
   function openFullscreen() {
     enter()
@@ -371,6 +368,10 @@ function FullscreenButton({
   }
 
   const tap = useTapAction(openFullscreen)
+
+  if (fullscreen) {
+    return null
+  }
 
   return (
     <Tooltip>
@@ -600,6 +601,7 @@ function PhotoSlideImage({
 
 // 渲染照片详情查看器，父组件负责传入当前照片和列表数据。
 export function PhotoViewer({ open, index, photos, onBack, onBrowserBack }: PhotoViewerProps) {
+  const { userInfo } = useApp() // 当前登录用户，用于判断照片是否本人可编辑标签。
   // 当前 lightbox 查看的照片索引。
   const [viewIndex, setViewIndex] = useState(index)
   // infoOpen 控制右侧照片信息侧栏是否展开。
@@ -932,7 +934,11 @@ export function PhotoViewer({ open, index, photos, onBack, onBrowserBack }: Phot
               <PhotoViewerBlurBackground thumbHash={photos[viewIndex]?.thumbHash} />
             )}
             {infoOpen && !fullscreenOpen && (
-              <PhotoInfoSidebar photo={photos[viewIndex] ?? null} onClose={() => setInfoOpen(false)} />
+              <PhotoInfoSidebar
+                photo={photos[viewIndex] ?? null}
+                isOwner={photos[viewIndex]?.userId === userInfo?.userId}
+                onClose={() => setInfoOpen(false)}
+              />
             )}
             <CloseButton showActions={actionsVisible} />
             <InfoButton

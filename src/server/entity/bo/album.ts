@@ -35,4 +35,8 @@ interface AlbumSetVisibilityBo {
   visibility: number;
 }
 
-export type { AlbumAddBo, AlbumAddPhotoBo, AlbumDeleteBo, AlbumRemovePhotoBo, AlbumSetNameBo, AlbumSetTopBo, AlbumSetVisibilityBo };
+interface AlbumShareBo {
+  albumId: string;
+}
+
+export type { AlbumAddBo, AlbumAddPhotoBo, AlbumDeleteBo, AlbumRemovePhotoBo, AlbumSetNameBo, AlbumSetTopBo, AlbumSetVisibilityBo, AlbumShareBo };

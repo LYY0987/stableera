@@ -19,11 +19,12 @@ type AlbumCardProps = Partial<RenderComponentProps<AlbumVo>> & {
   onRename?: (album: AlbumVo) => void
   onTop?: (album: AlbumVo) => void
   onVisibility?: (album: AlbumVo) => void
+  onShare?: (album: AlbumVo) => void
   onDelete?: (album: AlbumVo) => void
 }
 
 // 渲染虚拟列表中的单个相册卡片。
-export function AlbumCard({ data, width, href, onRename, onTop, onVisibility, onDelete }: AlbumCardProps) {
+export function AlbumCard({ data, width, href, onRename, onTop, onVisibility, onShare, onDelete }: AlbumCardProps) {
   const t = useTranslations("albums")
   const setCurrentAlbumName = useAlbumStore((state) => state.setCurrentAlbumName)
   const thumbnailSrc = data.thumbnail
@@ -43,6 +44,11 @@ export function AlbumCard({ data, width, href, onRename, onTop, onVisibility, on
   // 把可见性操作和当前相册交给上层页面。
   function changeAlbumVisibility() {
     onVisibility?.(data)
+  }
+
+  // 把分享操作和当前相册交给上层页面。
+  function shareAlbum() {
+    onShare?.(data)
   }
 
   // 把置顶操作和当前相册交给上层页面。
@@ -130,13 +136,14 @@ export function AlbumCard({ data, width, href, onRename, onTop, onVisibility, on
           </Tooltip>
         </div>
       </Link>
-      {onRename && onTop && onVisibility && onDelete && (
+      {onRename && onTop && onVisibility && onShare && onDelete && (
         <div className="absolute top-[4px] right-[4px] z-10">
           <AlbumActionMenu
             shadow={Boolean(thumbnailSrc)}
             onRename={renameAlbum}
             onTop={topAlbum}
             onVisibility={changeAlbumVisibility}
+            onShare={shareAlbum}
             onDelete={deleteAlbum}
           />
         </div>

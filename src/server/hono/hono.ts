@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import BizError from '../error/biz-error';
 import { security } from '../security/security';
 import { i18nMiddleware, t } from '@/server/i18n';
+import { rateLimit } from '@/server/lib/rate-limit';
 import type { HonoEnv } from './type';
 
 // 这个模块创建 Hono 应用并注册通用中间件与错误处理。
@@ -14,6 +15,7 @@ const app = new Hono<HonoEnv>().basePath('/api');
 app.use('*', cors());
 app.use('*', contextStorage());
 app.use('*', i18nMiddleware);
+app.use('*', rateLimit);
 app.use('*', security);
 
 // 统一处理接口异常并返回约定的响应结构。

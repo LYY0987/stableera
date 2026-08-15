@@ -18,6 +18,7 @@ interface AlbumMasonryProps {
   onAlbumRename?: (album: AlbumVo) => void
   onAlbumTop?: (album: AlbumVo) => void
   onAlbumVisibility?: (album: AlbumVo) => void
+  onAlbumShare?: (album: AlbumVo) => void
   onAlbumDelete?: (album: AlbumVo) => void
 }
 
@@ -67,7 +68,7 @@ function syncAlbumPositioner(items: AlbumVo[], columnWidth: number, positioner: 
 }
 
 // 渲染相册虚拟滚动列表。
-export function AlbumMasonry({ albums, resetKey = 0, onAlbumRename, onAlbumTop, onAlbumVisibility, onAlbumDelete }: AlbumMasonryProps) {
+export function AlbumMasonry({ albums, resetKey = 0, onAlbumRename, onAlbumTop, onAlbumVisibility, onAlbumShare, onAlbumDelete }: AlbumMasonryProps) {
   const { sidebarOpen } = useApp()
   // wrapRef 用于监听相册列表外层真实可视宽度。
   const wrapRef = useRef<HTMLDivElement | null>(null)
@@ -205,6 +206,7 @@ export function AlbumMasonry({ albums, resetKey = 0, onAlbumRename, onAlbumTop, 
             onRename={onAlbumRename}
             onTop={onAlbumTop}
             onVisibility={onAlbumVisibility}
+            onShare={onAlbumShare}
             onDelete={onAlbumDelete}
           />
         )}

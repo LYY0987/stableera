@@ -56,6 +56,7 @@ const createTableSqlList = [
         user_id TEXT NOT NULL,
         status INTEGER NOT NULL DEFAULT 1,
         favorite INTEGER NOT NULL DEFAULT 1,
+        visibility INTEGER NOT NULL DEFAULT 0,
         storage_id TEXT
     )`,
   `CREATE INDEX IF NOT EXISTS idx_photo_user_status_taken_time
@@ -121,6 +122,31 @@ const createTableSqlList = [
         value TEXT NOT NULL,
         expire_time INTEGER
     )`,
+
+  `CREATE TABLE IF NOT EXISTS user_favorite (
+        user_id TEXT NOT NULL,
+        photo_id TEXT NOT NULL,
+        create_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+        PRIMARY KEY (user_id, photo_id)
+    )`,
+  // 存量数据迁移：photo.favorite=2（已收藏）的记录归属为照片所有者。
+  `INSERT OR IGNORE INTO user_favorite (user_id, photo_id)
+        SELECT user_id, photo_id FROM photo WHERE favorite = 2`,
+
+  `CREATE TABLE IF NOT EXISTS album_share (
+        share_id TEXT PRIMARY KEY,
+        album_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        expires_at TEXT,
+        create_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+    )`,
+
+  `CREATE TABLE IF NOT EXISTS photo_tag (
+        photo_id TEXT NOT NULL,
+        tag TEXT NOT NULL,
+        PRIMARY KEY (photo_id, tag)
+    )`,
+  `CREATE INDEX IF NOT EXISTS idx_photo_tag_tag ON photo_tag (tag)`,
 ];
 
 // 执行全部建表语句，已存在的表会自动跳过。
@@ -144,14 +170,22 @@ async function migrate(): Promise<void> {
 // 增量迁移：为已存在的表补充新增列，已存在的列会自动跳过。
 async function migrateAlterColumns(): Promise<void> {
   // album 表 visibility 列：0 公开 / 1 私密，旧表缺失时补齐。
+  // photo 表 visibility 列：0 公开 / 1 私密，旧表缺失时补齐。
   const useTurso = Boolean(process.env.TURSO_DATABASE_URL)
 
   if (useTurso) {
-    const result = await turso!.execute(`PRAGMA table_info(album)`)
-    const albumColumns = (result.rows ?? []).map((row) => String(row.name))
+    const albumResult = await turso!.execute(`PRAGMA table_info(album)`)
+    const albumColumns = (albumResult.rows ?? []).map((row) => String(row.name))
 
     if (!albumColumns.includes('visibility')) {
       await turso!.execute(`ALTER TABLE album ADD COLUMN visibility INTEGER NOT NULL DEFAULT 0`)
+    }
+
+    const photoResult = await turso!.execute(`PRAGMA table_info(photo)`)
+    const photoColumns = (photoResult.rows ?? []).map((row) => String(row.name))
+
+    if (!photoColumns.includes('visibility')) {
+      await turso!.execute(`ALTER TABLE photo ADD COLUMN visibility INTEGER NOT NULL DEFAULT 0`)
     }
     return
   }
@@ -160,6 +194,12 @@ async function migrateAlterColumns(): Promise<void> {
 
   if (!albumColumns.some((col) => col.name === 'visibility')) {
     db!.exec(`ALTER TABLE album ADD COLUMN visibility INTEGER NOT NULL DEFAULT 0`)
+  }
+
+  const photoColumns = db!.prepare(`PRAGMA table_info(photo)`).all() as { name: string }[]
+
+  if (!photoColumns.some((col) => col.name === 'visibility')) {
+    db!.exec(`ALTER TABLE photo ADD COLUMN visibility INTEGER NOT NULL DEFAULT 0`)
   }
 }
 

@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { PhotoFavoriteEnum, PhotoStatusEnum } from '@/server/enums/photo-enum';
+import { PhotoFavoriteEnum, PhotoStatusEnum, PhotoVisibilityEnum } from '@/server/enums/photo-enum';
 
 // 照片
 export const photoTab = sqliteTable('photo', {
@@ -19,6 +19,7 @@ export const photoTab = sqliteTable('photo', {
   userId: text('user_id').notNull(), // 创建用户id
   status: integer('status').default(PhotoStatusEnum.NORMAL).notNull(), // 状态 1正常 2回收
   favorite: integer('favorite').default(PhotoFavoriteEnum.NO).notNull(), // 收藏 1未收藏 2已收藏
+  visibility: integer('visibility').default(PhotoVisibilityEnum.PUBLIC).notNull(), // 可见性 0公开 1私密
   storageId: text('storage_id') // 存储id
 });
 

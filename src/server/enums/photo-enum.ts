@@ -10,4 +10,10 @@ const PhotoFavoriteEnum = {
   YES: 2
 } as const;
 
-export { PhotoStatusEnum, PhotoFavoriteEnum };
+// 照片可见性：公开（所有人可见，默认）/ 私密（仅照片所有者可见）。
+const PhotoVisibilityEnum = {
+  PUBLIC: 0,
+  PRIVATE: 1
+} as const;
+
+export { PhotoFavoriteEnum, PhotoStatusEnum, PhotoVisibilityEnum };

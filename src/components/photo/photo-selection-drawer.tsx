@@ -1,24 +1,28 @@
 "use client"
 
 import { useEffect } from "react"
-import { CheckCheck, FolderMinusIcon, FolderPlusIcon, RotateCcwIcon, Trash2Icon, XIcon } from "lucide-react"
+import { CheckCheck, EyeIcon, EyeOffIcon, FolderMinusIcon, FolderPlusIcon, RotateCcwIcon, Trash2Icon, XIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { PhotoVisibilityEnum } from "@/server/enums/photo-enum"
 
 interface PhotoSelectionDrawerProps {
   open: boolean
   onClose: () => void
-  onDelete: () => void
+  onDelete?: () => void
   onSelectAll: () => void
   onRestore?: () => void
   onAlbumOpen?: () => void
   onAlbumRemove?: () => void
+  // visibilityTarget 为批量切换后的目标可见性，未提供时不显示切换按钮。
+  visibilityTarget?: number
+  onVisibilityToggle?: () => void
 }
 
 // 渲染照片多选状态下的顶部操作抽屉。
-export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onRestore, onAlbumOpen, onAlbumRemove }: PhotoSelectionDrawerProps) {
+export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onRestore, onAlbumOpen, onAlbumRemove, visibilityTarget, onVisibilityToggle }: PhotoSelectionDrawerProps) {
   const t = useTranslations("photos.actions")
 
   useEffect(() => {
@@ -48,6 +52,11 @@ export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onR
   // 通知上层把选中照片移出当前相册。
   function removeAlbumPhotos() {
     onAlbumRemove?.()
+  }
+
+  // 切换选中照片的可见性（公开/私密）。
+  function toggleVisibility() {
+    onVisibilityToggle?.()
   }
 
 
@@ -94,14 +103,26 @@ export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onR
               <TooltipContent side="bottom">{t("restore")}</TooltipContent>
             </Tooltip>
           )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" onClick={onDelete} aria-label={t("delete")}>
-                <Trash2Icon />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">{t("delete")}</TooltipContent>
-          </Tooltip>
+          {onDelete && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" onClick={onDelete} aria-label={t("delete")}>
+                  <Trash2Icon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("delete")}</TooltipContent>
+            </Tooltip>
+          )}
+          {onVisibilityToggle && visibilityTarget !== undefined && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" onClick={toggleVisibility} aria-label={visibilityTarget === PhotoVisibilityEnum.PRIVATE ? t("setPrivate") : t("setPublic")}>
+                  {visibilityTarget === PhotoVisibilityEnum.PRIVATE ? <EyeOffIcon /> : <EyeIcon />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{visibilityTarget === PhotoVisibilityEnum.PRIVATE ? t("setPrivate") : t("setPublic")}</TooltipContent>
+            </Tooltip>
+          )}
           {onAlbumOpen && (
             <Tooltip>
               <TooltipTrigger asChild>
