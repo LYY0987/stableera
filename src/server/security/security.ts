@@ -64,6 +64,24 @@ function clearLoginCookies(c: Context) {
   });
 }
 
+// 从请求 Cookie 解析并校验登录信息，无效或未登录时返回 null（不抛异常）。
+async function resolveLoginInfo(c: Context): Promise<AuthInfo | null> {
+  const { userId, uuid } = await getLoginInfo(c.req.header('cookie') ?? null);
+
+  if (!userId || !uuid) {
+    return null;
+  }
+
+  // 从缓存读取登录信息，并确认当前 uuid 仍有效。
+  const authInfo = await cache.get<AuthInfo>(AUTH_CACHE_KEY + userId);
+
+  if (!authInfo || !authInfo.uuidList.includes(uuid)) {
+    return null;
+  }
+
+  return authInfo;
+}
+
 // 校验登录信息与会话 uuid，通过后写入上下文；公开路径直接放行。
 async function security(c: Context, next: Next) {
 
@@ -85,17 +103,9 @@ async function security(c: Context, next: Next) {
     return next();
   }
 
-  const { userId, uuid } = await getLoginInfo(c.req.header('cookie') ?? null);
+  const authInfo = await resolveLoginInfo(c);
 
-  if (!userId || !uuid) {
-    clearLoginCookies(c);
-    throw new BizError('auth.failed', 401);
-  }
-
-  // 从缓存读取登录信息，并确认当前 uuid 仍有效。
-  const authInfo = await cache.get<AuthInfo>(AUTH_CACHE_KEY + userId);
-
-  if (!authInfo || !authInfo.uuidList.includes(uuid)) {
+  if (!authInfo) {
     clearLoginCookies(c);
     throw new BizError('auth.failed', 401);
   }
@@ -114,4 +124,4 @@ async function security(c: Context, next: Next) {
   return next();
 }
 
-export { security };
+export { resolveLoginInfo, security };

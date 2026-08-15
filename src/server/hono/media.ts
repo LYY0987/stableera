@@ -10,7 +10,8 @@ import { eq, and } from 'drizzle-orm';
 import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
 import { PhotoStatusEnum, PhotoVisibilityEnum } from '@/server/enums/photo-enum';
 import { contextStorage } from 'hono/context-storage';
-import { getUserId } from '@/server/security/context';
+import { getUserId, setUserId } from '@/server/security/context';
+import { resolveLoginInfo } from '@/server/security/security';
 import { cors } from 'hono/cors';
 import { buildContentDisposition } from '@/server/lib/file';
 import { FileTypeEnum } from '@/server/enums/file-enum';
@@ -26,6 +27,16 @@ const media = new Hono<HonoEnv>();
 media.use('*', cors());
 media.use('*', contextStorage());
 media.use('*', i18nMiddleware);
+// 解析登录用户上下文：有有效会话时写入 userId，匿名用户直接放行走分享令牌鉴权。
+media.use('*', async (c: Context, next: Next) => {
+  const authInfo = await resolveLoginInfo(c);
+
+  if (authInfo) {
+    setUserId(authInfo.userId);
+  }
+
+  await next();
+});
 media.onError((err, c) => {
   if (err instanceof BizError) {
     return c.text(t(err.message), 500);

@@ -279,7 +279,12 @@ const photoService = {
       .from(userTab)
       .where(inArray(userTab.userId, uniqueIds));
 
-    return new Map(rows.map((row) => [row.userId, row]));
+    return new Map(rows.map((row) => [row.userId, {
+      userId: row.userId,
+      username: row.username,
+      // user.avatar 存的是 avatar_base64 表 id，转换为可请求的头像地址。
+      avatar: row.avatar ? `/api/user/avatar/${row.avatar}` : '',
+    }]));
   },
 
   // 设置当前用户指定照片的可见性（公开/私密），仅照片所有者可操作。
