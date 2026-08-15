@@ -7,7 +7,8 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: pixtale
+  # 镜像名沿用项目名（须小写），此前误沿用上游 Pixtale 的命名。
+  IMAGE_NAME: stableera
 
 jobs:
   # 各架构在原生 Runner 上分别构建，避免 QEMU 模拟 arm64。
