@@ -37,6 +37,7 @@ import { type Exif } from '@/server/entity/exif';
 import { exifService } from '@/server/service/exif-service';
 import { buildPhotoKey, buildPreviewKey, buildThumbnailKey } from '@/server/lib/photo-path';
 import { type File as PhotoFile, fileTab } from '@/server/entity/file';
+import { userFavoriteTab } from '@/server/entity/user-favorite';
 import { fileService } from '@/server/service/file-service';
 import { FileTypeEnum } from '@/server/enums/file-enum';
 
@@ -60,7 +61,8 @@ const photoService = {
     ];
 
     if (params.favorite) {
-      whereList.push(eq(photoTab.favorite, params.favorite));
+      // 收藏筛选改为当前用户自己的收藏记录，而不是共享的 photo.favorite 列。
+      whereList.push(inArray(photoTab.photoId, this.buildUserFavoritePhotoIdQuery(userId)));
     }
 
     if (params.startTakenTime) {
@@ -117,16 +119,21 @@ const photoService = {
 
     const fileStorageList = await storageService.getStorageList();
     const photoIds = list.map((photo) => photo.photoId);
-    const [exifMap, fileMap] = await Promise.all([
+    const [exifMap, fileMap, favoritePhotoIds] = await Promise.all([
       exifService.listByPhotoIds(photoIds),
       fileService.listByPhotoIds(photoIds),
+      this.listUserFavoritePhotoIds(photoIds, userId),
     ]);
 
     const result = list.map((photo) => {
       const fileStorage = fileStorageList.find((item) => item.storageId === photo.storageId);
       const domain = formatHttpUrl(fileStorage?.domain);
+      const vo = this.toPhotoVo(photo, fileMap.get(photo.photoId) ?? [], fileStorage, domain, exifMap.get(photo.photoId) ?? null);
 
-      return this.toPhotoVo(photo, fileMap.get(photo.photoId) ?? [], fileStorage, domain, exifMap.get(photo.photoId) ?? null);
+      // 收藏状态按当前用户覆盖，photo 表的 favorite 列仅作历史兼容。
+      vo.favorite = favoritePhotoIds.has(photo.photoId) ? PhotoFavoriteEnum.YES : PhotoFavoriteEnum.NO;
+
+      return vo;
     });
 
     return {
@@ -144,7 +151,8 @@ const photoService = {
     ];
 
     if (params.favorite) {
-      whereList.push(eq(photoTab.favorite, params.favorite));
+      // 收藏日期统计同样按当前用户自己的收藏记录过滤。
+      whereList.push(inArray(photoTab.photoId, this.buildUserFavoritePhotoIdQuery(userId)));
     }
 
     const tzModifier = params.tzOffset >= 0 ? `+${params.tzOffset} minutes` : `${params.tzOffset} minutes`;
@@ -192,6 +200,31 @@ const photoService = {
       .from(albumPhotoTab)
       .innerJoin(albumTab, eq(albumPhotoTab.albumId, albumTab.albumId))
       .where(eq(albumTab.visibility, AlbumVisibilityEnum.PRIVATE));
+  },
+
+  // 构造子查询：返回当前用户已收藏照片的 photoId，用于列表与日期统计的收藏筛选。
+  buildUserFavoritePhotoIdQuery(userId: string) {
+    return orm
+      .select({ photoId: userFavoriteTab.photoId })
+      .from(userFavoriteTab)
+      .where(eq(userFavoriteTab.userId, userId));
+  },
+
+  // 查询指定照片集合中当前用户已收藏的 photoId 集合。
+  async listUserFavoritePhotoIds(photoIds: string[], userId: string): Promise<Set<string>> {
+    if (!photoIds.length) {
+      return new Set();
+    }
+
+    const rows = await orm
+      .select({ photoId: userFavoriteTab.photoId })
+      .from(userFavoriteTab)
+      .where(and(
+        eq(userFavoriteTab.userId, userId),
+        inArray(userFavoriteTab.photoId, photoIds)
+      ));
+
+    return new Set(rows.map((row) => row.photoId));
   },
 
   // 根据原文件名生成存储 key，若 key 已存在则在扩展名前追加时间戳。
@@ -428,7 +461,7 @@ const photoService = {
       .where(eq(photoTab.userId, userId));
   },
 
-  // 设置当前用户指定照片的收藏状态。
+  // 设置当前用户对指定照片的收藏状态，收藏记录按用户独立存储。
   async favorite(params: PhotoFavoriteBo, userId: string): Promise<void> {
     if (!params.photoIds?.length) {
       throw new BizError('photo.selectRequired');
@@ -438,13 +471,21 @@ const photoService = {
       throw new BizError('photo.favoriteRequired');
     }
 
-    await orm.update(photoTab)
-      .set({
-        favorite: params.favorite
-      })
+    const photoIds = Array.from(new Set(params.photoIds));
+
+    if (params.favorite === PhotoFavoriteEnum.YES) {
+      // 收藏：批量写入 user_favorite，已存在的记录自动跳过。
+      await orm.insert(userFavoriteTab)
+        .values(photoIds.map((photoId) => ({ userId, photoId })))
+        .onConflictDoNothing();
+      return;
+    }
+
+    // 取消收藏：删除当前用户对应的收藏记录。
+    await orm.delete(userFavoriteTab)
       .where(and(
-        eq(photoTab.userId, userId),
-        inArray(photoTab.photoId, params.photoIds)
+        eq(userFavoriteTab.userId, userId),
+        inArray(userFavoriteTab.photoId, photoIds)
       ));
   },
 
@@ -498,6 +539,9 @@ const photoService = {
 
     await orm.delete(albumPhotoTab)
       .where(inArray(albumPhotoTab.photoId, photoIds));
+
+    await orm.delete(userFavoriteTab)
+      .where(inArray(userFavoriteTab.photoId, photoIds));
 
     await fileService.deleteByPhotoIds(photoIds);
 
@@ -580,6 +624,9 @@ const photoService = {
 
       await orm.delete(albumPhotoTab)
         .where(inArray(albumPhotoTab.photoId, photoIds));
+
+      await orm.delete(userFavoriteTab)
+        .where(inArray(userFavoriteTab.photoId, photoIds));
 
       await fileService.deleteByPhotoIds(photoIds);
 

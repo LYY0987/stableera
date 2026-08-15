@@ -121,6 +121,16 @@ const createTableSqlList = [
         value TEXT NOT NULL,
         expire_time INTEGER
     )`,
+
+  `CREATE TABLE IF NOT EXISTS user_favorite (
+        user_id TEXT NOT NULL,
+        photo_id TEXT NOT NULL,
+        create_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+        PRIMARY KEY (user_id, photo_id)
+    )`,
+  // 存量数据迁移：photo.favorite=2（已收藏）的记录归属为照片所有者。
+  `INSERT OR IGNORE INTO user_favorite (user_id, photo_id)
+        SELECT user_id, photo_id FROM photo WHERE favorite = 2`,
 ];
 
 // 执行全部建表语句，已存在的表会自动跳过。
