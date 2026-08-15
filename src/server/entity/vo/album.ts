@@ -8,4 +8,12 @@ interface AlbumVo extends Album {
   photoTotal: number;
 }
 
-export type { AlbumVo };
+// 相册分享信息返回对象。
+interface AlbumShareVo {
+  token: string;
+  albumId: string;
+  createTime: string;
+  expiresAt: string | null;
+}
+
+export type { AlbumShareVo, AlbumVo };

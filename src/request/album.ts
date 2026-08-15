@@ -1,7 +1,7 @@
 import { http } from "@/request/request";
 import { type Album } from "@/server/entity/album";
-import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo } from "@/server/entity/bo/album";
-import { type AlbumVo } from "@/server/entity/vo/album";
+import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo, type AlbumShareBo } from "@/server/entity/bo/album";
+import { type AlbumShareVo, type AlbumVo } from "@/server/entity/vo/album";
 
 // 这个模块封装相册相关接口请求。
 
@@ -48,4 +48,19 @@ export function albumSetVisibility(params: AlbumSetVisibilityBo) {
 // 查询回收站虚拟相册。
 export function albumTrash() {
   return http.post<AlbumVo>('/album/trash');
+}
+
+// 创建或返回相册分享令牌。
+export function albumShareCreate(params: AlbumShareBo) {
+  return http.post<AlbumShareVo>('/album/share/create', params);
+}
+
+// 查询相册分享令牌，未分享时返回 null。
+export function albumShareStatus(params: AlbumShareBo) {
+  return http.post<AlbumShareVo | null>('/album/share/status', params);
+}
+
+// 撤销相册分享。
+export function albumShareDelete(params: AlbumShareBo) {
+  return http.post<void>('/album/share/delete', params);
 }

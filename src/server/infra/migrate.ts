@@ -132,6 +132,14 @@ const createTableSqlList = [
   // 存量数据迁移：photo.favorite=2（已收藏）的记录归属为照片所有者。
   `INSERT OR IGNORE INTO user_favorite (user_id, photo_id)
         SELECT user_id, photo_id FROM photo WHERE favorite = 2`,
+
+  `CREATE TABLE IF NOT EXISTS album_share (
+        share_id TEXT PRIMARY KEY,
+        album_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        expires_at TEXT,
+        create_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+    )`,
 ];
 
 // 执行全部建表语句，已存在的表会自动跳过。

@@ -394,10 +394,13 @@ const photoService = {
       return { photo: null, duplicate: true };
     }
 
-    const images = await processPhotoImages(buffer);
-    const meta = process.env.VERCEL
-      ? await readExifWithExifr(buffer)
-      : await readExifWithExiftool(buffer);
+    // 图片处理（缩略图/预览/thumbHash）与 EXIF 解析相互独立，并行执行缩短上传耗时。
+    const [images, meta] = await Promise.all([
+      processPhotoImages(buffer),
+      process.env.VERCEL
+        ? readExifWithExifr(buffer)
+        : readExifWithExiftool(buffer),
+    ]);
     const takenTime = meta.takenTime ?? new Date(lastModified > 0 ? lastModified : Date.now()).toISOString();
     const key = uploadedKey || await this.resolvePhotoKey(userId, name);
     const photoId = createId();

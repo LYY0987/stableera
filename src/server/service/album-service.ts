@@ -1,14 +1,17 @@
 import { and, count, desc, eq, inArray, max } from 'drizzle-orm';
 import { createId } from '@/server/lib/id';
+import { randomUUID } from 'node:crypto';
 import { type Album, albumTab } from '@/server/entity/album';
 import { albumPhotoTab } from '@/server/entity/album-photo';
+import { albumShareTab } from '@/server/entity/album-share';
+import { type AlbumShare } from '@/server/entity/album-share';
 import { photoTab } from '@/server/entity/photo';
 import { orm } from '@/server/infra/db';
 import BizError from '@/server/error/biz-error';
-import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo } from '@/server/entity/bo/album';
+import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo, type AlbumShareBo } from '@/server/entity/bo/album';
 import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
 import { PhotoStatusEnum } from '@/server/enums/photo-enum';
-import { type AlbumVo } from '@/server/entity/vo/album';
+import { type AlbumShareVo, type AlbumVo } from '@/server/entity/vo/album';
 import { storageService } from '@/server/service/storage-service';
 import { formatHttpUrl, toMediaUrl } from '@/lib/url';
 import { fileService } from '@/server/service/file-service';
@@ -102,6 +105,99 @@ const albumService = {
       .limit(1);
 
     return album ?? null;
+  },
+
+  // 创建或返回当前用户指定相册的分享令牌，每个相册最多一个分享。
+  async createShare(params: AlbumShareBo, userId: string): Promise<AlbumShareVo> {
+    const album = await this.getOwned(params.albumId, userId);
+
+    if (!album) {
+      throw new BizError('album.notFound');
+    }
+
+    const [existing] = await orm
+      .select()
+      .from(albumShareTab)
+      .where(eq(albumShareTab.albumId, params.albumId))
+      .limit(1);
+
+    if (existing) {
+      return this.toShareVo(existing);
+    }
+
+    const share: AlbumShare = {
+      shareId: randomUUID(),
+      albumId: params.albumId,
+      userId,
+      expiresAt: null,
+      createTime: new Date().toISOString(),
+    };
+
+    await orm.insert(albumShareTab).values(share);
+
+    return this.toShareVo(share);
+  },
+
+  // 删除当前用户指定相册的分享令牌，撤销分享链接。
+  async deleteShare(params: AlbumShareBo, userId: string): Promise<void> {
+    const album = await this.getOwned(params.albumId, userId);
+
+    if (!album) {
+      throw new BizError('album.notFound');
+    }
+
+    await orm.delete(albumShareTab)
+      .where(eq(albumShareTab.albumId, params.albumId));
+  },
+
+  // 查询当前用户指定相册的分享令牌，未分享时返回 null。
+  async getShare(params: AlbumShareBo, userId: string): Promise<AlbumShareVo | null> {
+    const [share] = await orm
+      .select()
+      .from(albumShareTab)
+      .where(and(
+        eq(albumShareTab.albumId, params.albumId),
+        eq(albumShareTab.userId, userId)
+      ))
+      .limit(1);
+
+    return share ? this.toShareVo(share) : null;
+  },
+
+  // 根据分享令牌查询有效的分享记录（公开读取，供分享页与匿名媒体访问使用）。
+  async getShareByToken(token: string): Promise<AlbumShare | null> {
+    const trimmedToken = token?.trim();
+
+    if (!trimmedToken) {
+      return null;
+    }
+
+    const [share] = await orm
+      .select()
+      .from(albumShareTab)
+      .where(eq(albumShareTab.shareId, trimmedToken))
+      .limit(1);
+
+    if (!share) {
+      return null;
+    }
+
+    // 已过期的分享视为不存在。
+    if (share.expiresAt && new Date(share.expiresAt).getTime() < Date.now()) {
+      return null;
+    }
+
+    return share;
+  },
+
+  // 把分享记录转换为接口返回对象。
+  toShareVo(share: AlbumShare): AlbumShareVo {
+    return {
+      token: share.shareId,
+      albumId: share.albumId,
+      createTime: share.createTime,
+      expiresAt: share.expiresAt,
+    };
   },
 
   // 相册数据变更后清除相册列表缓存。
@@ -316,6 +412,9 @@ const albumService = {
     await orm.delete(albumPhotoTab)
       .where(eq(albumPhotoTab.albumId, params.albumId));
 
+    await orm.delete(albumShareTab)
+      .where(eq(albumShareTab.albumId, params.albumId));
+
     await orm.delete(albumTab)
       .where(eq(albumTab.albumId, params.albumId));
 
@@ -339,6 +438,8 @@ const albumService = {
       const deleteAlbumIds = albumIds.slice(index, index + 95);
       await orm.delete(albumPhotoTab)
         .where(inArray(albumPhotoTab.albumId, deleteAlbumIds));
+      await orm.delete(albumShareTab)
+        .where(inArray(albumShareTab.albumId, deleteAlbumIds));
     }
 
     await orm.delete(albumTab)
