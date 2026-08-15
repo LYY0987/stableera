@@ -31,6 +31,7 @@
   "photos.viewer.actions.enterFullscreen": "Enter fullscreen",
   "photos.upload.actions.settings": "Upload settings",
   "photos.upload.title": "Upload Photos",
+  "photos.upload.publicNotice": "Uploaded photos are public by default: all logged-in users can see them.",
   "photos.upload.previewFailed": "Couldn't create a preview for {name}",
   "photos.upload.invalidStorage": "Select a valid storage location",
   "photos.upload.demoReadonly": "This action isn't available in demo mode.",

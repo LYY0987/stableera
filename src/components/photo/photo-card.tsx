@@ -19,6 +19,8 @@ type TouchHoverCloseRef = {
 type PhotoCardProps = RenderComponentProps<PhotoVo> & {
   selected?: boolean
   selectionActive?: boolean
+  // isOwner 标记当前照片是否属于当前登录用户，非本人照片不显示收藏等管理按钮。
+  isOwner?: boolean
   onOpen?: () => void
   onFavoriteChange?: (index: number, setFavorite: (favorite: boolean) => void) => void
   onSelectedChange?: (photoId: string, selected: boolean) => void
@@ -52,6 +54,7 @@ export function PhotoCard({
   width,
   selected = false,
   selectionActive = false,
+  isOwner = true,
   onOpen,
   onFavoriteChange,
   onSelectedChange,
@@ -211,7 +214,7 @@ export function PhotoCard({
           ].join(" ")}
         />
       )}
-      {onFavoriteChange && !selectionActive && !selected && (
+      {onFavoriteChange && isOwner && !selectionActive && !selected && (
         <Button
           type="button"
           size="icon-sm"

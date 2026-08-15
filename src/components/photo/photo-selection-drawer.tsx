@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 interface PhotoSelectionDrawerProps {
   open: boolean
   onClose: () => void
-  onDelete: () => void
+  onDelete?: () => void
   onSelectAll: () => void
   onRestore?: () => void
   onAlbumOpen?: () => void
@@ -94,14 +94,16 @@ export function PhotoSelectionDrawer({ open, onClose, onDelete, onSelectAll, onR
               <TooltipContent side="bottom">{t("restore")}</TooltipContent>
             </Tooltip>
           )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" onClick={onDelete} aria-label={t("delete")}>
-                <Trash2Icon />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">{t("delete")}</TooltipContent>
-          </Tooltip>
+          {onDelete && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" onClick={onDelete} aria-label={t("delete")}>
+                  <Trash2Icon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("delete")}</TooltipContent>
+            </Tooltip>
+          )}
           {onAlbumOpen && (
             <Tooltip>
               <TooltipTrigger asChild>

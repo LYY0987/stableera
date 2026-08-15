@@ -4,7 +4,7 @@ import { storage } from '@/server/storage/storage';
 import { orm } from '@/server/infra/db';
 import { photoTab } from '@/server/entity/photo';
 import { fileTab } from '@/server/entity/file';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { contextStorage } from 'hono/context-storage';
 import { security } from '../security/security';
 import { getUserId } from '@/server/security/context';
@@ -30,7 +30,7 @@ media.onError((err, c) => {
   return c.text(err.message, 500);
 });
 
-// 根据文件 key 和当前用户 id 查询对应的文件和照片信息。
+// 根据文件 key 查询对应的文件和照片信息，照片墙公开后所有登录用户均可读取媒体文件。
 async function getPhotoFile(key: string) {
 
   const userId = getUserId();
@@ -50,7 +50,7 @@ async function getPhotoFile(key: string) {
     })
     .from(fileTab)
     .innerJoin(photoTab, eq(fileTab.photoId, photoTab.photoId))
-    .where(and(eq(fileTab.key, key), eq(photoTab.userId, userId)))
+    .where(eq(fileTab.key, key))
     .limit(1);
 
   return row;
