@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { AlertDialogDestructive } from "@/components/common/alert-destructive"
 import { AlbumAddDialog } from "@/components/album/album-add-dialog"
 import { AlbumRenameDialog } from "@/components/album/album-rename-dialog"
+import { AlbumShareDialog } from "@/components/album/album-share-dialog"
 import { AlbumVisibilityDialog } from "@/components/album/album-visibility-dialog"
 import {
   Breadcrumb,
@@ -50,6 +51,10 @@ export default function Page() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   // deletingAlbum 保存当前等待删除确认的相册。
   const [deletingAlbum, setDeletingAlbum] = useState<AlbumVo | null>(null)
+  // shareOpen 控制分享弹框的打开状态。
+  const [shareOpen, setShareOpen] = useState(false)
+  // sharingAlbum 保存当前正在分享的相册。
+  const [sharingAlbum, setSharingAlbum] = useState<AlbumVo | null>(null)
 
   useEffect(() => {
     // 刷新相册页时禁用浏览器滚动恢复，并回到列表顶部。
@@ -144,6 +149,21 @@ export default function Page() {
 
     setDeletingAlbum(album)
     setDeleteOpen(true)
+  }
+
+  // 打开相册分享弹框。
+  function shareAlbum(album: AlbumVo) {
+    setSharingAlbum(album)
+    setShareOpen(true)
+  }
+
+  // 处理分享弹框打开状态。
+  function handleShareOpenChange(open: boolean) {
+    setShareOpen(open)
+
+    if (!open) {
+      setSharingAlbum(null)
+    }
   }
 
   // 删除相册后更新当前列表。
@@ -244,6 +264,7 @@ export default function Page() {
               onAlbumRename={renameAlbum}
               onAlbumTop={topAlbum}
               onAlbumVisibility={changeAlbumVisibility}
+              onAlbumShare={shareAlbum}
               onAlbumDelete={openDeleteAlbum}
             />
           </div>
@@ -272,6 +293,13 @@ export default function Page() {
         description={t("deleteDescription")}
         onConfirm={confirmDeleteAlbum}
       />
+      {sharingAlbum && (
+        <AlbumShareDialog
+          open={shareOpen}
+          album={sharingAlbum}
+          onOpenChange={handleShareOpenChange}
+        />
+      )}
     </>
   )
 }

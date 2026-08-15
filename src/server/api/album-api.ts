@@ -3,7 +3,7 @@ import { Context } from 'hono';
 import result from '@/server/model/result';
 import { getUserId } from '@/server/security/context';
 import { albumService } from '@/server/service/album-service';
-import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo } from '@/server/entity/bo/album';
+import { type AlbumAddBo, type AlbumAddPhotoBo, type AlbumDeleteBo, type AlbumRemovePhotoBo, type AlbumSetNameBo, type AlbumSetTopBo, type AlbumSetVisibilityBo, type AlbumShareBo } from '@/server/entity/bo/album';
 
 // 这个模块注册相册相关接口。
 
@@ -65,5 +65,26 @@ app.post('/album/setVisibility', async (c: Context) => {
 app.post('/album/delete', async (c: Context) => {
   const body = await c.req.json<AlbumDeleteBo>();
   await albumService.delete(body, getUserId());
+  return c.json(result.ok());
+});
+
+// 创建或返回当前用户指定相册的分享令牌。
+app.post('/album/share/create', async (c: Context) => {
+  const body = await c.req.json<AlbumShareBo>();
+  const data = await albumService.createShare(body, getUserId());
+  return c.json(result.ok(data));
+});
+
+// 查询当前用户指定相册的分享令牌，未分享时返回 null。
+app.post('/album/share/status', async (c: Context) => {
+  const body = await c.req.json<AlbumShareBo>();
+  const data = await albumService.getShare(body, getUserId());
+  return c.json(result.ok(data));
+});
+
+// 撤销当前用户指定相册的分享。
+app.post('/album/share/delete', async (c: Context) => {
+  const body = await c.req.json<AlbumShareBo>();
+  await albumService.deleteShare(body, getUserId());
   return c.json(result.ok());
 });
