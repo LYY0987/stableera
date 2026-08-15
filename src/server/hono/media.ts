@@ -4,7 +4,11 @@ import { storage } from '@/server/storage/storage';
 import { orm } from '@/server/infra/db';
 import { photoTab } from '@/server/entity/photo';
 import { fileTab } from '@/server/entity/file';
-import { eq } from 'drizzle-orm';
+import { albumPhotoTab } from '@/server/entity/album-photo';
+import { albumTab } from '@/server/entity/album';
+import { eq, and } from 'drizzle-orm';
+import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
+import { PhotoStatusEnum } from '@/server/enums/photo-enum';
 import { contextStorage } from 'hono/context-storage';
 import { security } from '../security/security';
 import { getUserId } from '@/server/security/context';
@@ -30,7 +34,7 @@ media.onError((err, c) => {
   return c.text(err.message, 500);
 });
 
-// 根据文件 key 查询对应的文件和照片信息，照片墙公开后所有登录用户均可读取媒体文件。
+// 查询文件对应的照片信息；非照片所有者读取时，私密相册中的照片媒体视为不存在。
 async function getPhotoFile(key: string) {
 
   const userId = getUserId();
@@ -46,12 +50,37 @@ async function getPhotoFile(key: string) {
       fileType: fileTab.fileType,
       name: photoTab.name,
       photoId: photoTab.photoId,
-      storageId: photoTab.storageId
+      storageId: photoTab.storageId,
+      ownerUserId: photoTab.userId,
+      status: photoTab.status
     })
     .from(fileTab)
     .innerJoin(photoTab, eq(fileTab.photoId, photoTab.photoId))
     .where(eq(fileTab.key, key))
     .limit(1);
+
+  if (!row) {
+    return null;
+  }
+
+  // 照片所有者始终可读取自己的媒体；其他用户只能读取未删除、未加入任何私密相册的公开照片。
+  if (row.ownerUserId !== userId) {
+    const [privatePhoto] = await orm
+      .select({
+        photoId: albumPhotoTab.photoId
+      })
+      .from(albumPhotoTab)
+      .innerJoin(albumTab, eq(albumPhotoTab.albumId, albumTab.albumId))
+      .where(and(
+        eq(albumPhotoTab.photoId, row.photoId),
+        eq(albumTab.visibility, AlbumVisibilityEnum.PRIVATE)
+      ))
+      .limit(1);
+
+    if (row.status !== PhotoStatusEnum.NORMAL || privatePhoto) {
+      return null;
+    }
+  }
 
   return row;
 }

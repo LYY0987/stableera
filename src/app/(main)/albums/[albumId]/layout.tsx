@@ -2,6 +2,8 @@ import { AlbumPhotoProvider } from "./provider"
 import { getProxyUser } from "@/server/lib/proxy-user"
 import { PHOTO_LIST_PAGE_SIZE } from "@/server/const/global"
 import { photoService } from "@/server/service/photo-service"
+import { albumService } from "@/server/service/album-service"
+import { notFound } from "next/navigation"
 
 interface AlbumPhotoLayoutProps {
   children: React.ReactNode
@@ -10,13 +12,19 @@ interface AlbumPhotoLayoutProps {
   }>
 }
 
-// 服务端查询当前相册照片第一页，并提供给相册照片页初始化列表。
+// 服务端查询当前相册照片第一页，并提供给相册照片页初始化列表；相册不存在或不属于当前用户时返回 404。
 export default async function AlbumPhotoLayout({ children, params }: AlbumPhotoLayoutProps) {
   const { albumId } = await params
   const proxyUser = await getProxyUser()
 
   if (!proxyUser) {
     return null
+  }
+
+  const album = await albumService.getOwned(albumId, proxyUser.userId)
+
+  if (!album) {
+    notFound()
   }
 
   const data = await photoService.list({

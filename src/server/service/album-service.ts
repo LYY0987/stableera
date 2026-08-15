@@ -90,6 +90,20 @@ const albumService = {
     return list;
   },
 
+  // 查询当前用户的指定相册，不存在或不属于当前用户时返回 null。
+  async getOwned(albumId: string, userId: string): Promise<Album | null> {
+    const [album] = await orm
+      .select()
+      .from(albumTab)
+      .where(and(
+        eq(albumTab.albumId, albumId),
+        eq(albumTab.userId, userId)
+      ))
+      .limit(1);
+
+    return album ?? null;
+  },
+
   // 相册数据变更后清除相册列表缓存。
   async invalidateListCache(userId: string): Promise<void> {
     await cache.delete(ALBUM_LIST_CACHE_KEY + userId);
@@ -281,17 +295,29 @@ const albumService = {
     await this.invalidateListCache(userId);
   },
 
-  // 删除当前用户指定相册，并清理相册照片关联。
+  // 删除当前用户指定相册，并清理相册照片关联；先校验相册归属，防止越权清空他人相册。
   async delete(params: AlbumDeleteBo, userId: string): Promise<void> {
+
+    const [album] = await orm
+      .select({
+        albumId: albumTab.albumId
+      })
+      .from(albumTab)
+      .where(and(
+        eq(albumTab.albumId, params.albumId),
+        eq(albumTab.userId, userId)
+      ))
+      .limit(1);
+
+    if (!album) {
+      return;
+    }
 
     await orm.delete(albumPhotoTab)
       .where(eq(albumPhotoTab.albumId, params.albumId));
 
     await orm.delete(albumTab)
-      .where(and(
-        eq(albumTab.albumId, params.albumId),
-        eq(albumTab.userId, userId)
-      ));
+      .where(eq(albumTab.albumId, params.albumId));
 
     await this.invalidateListCache(userId);
   },
