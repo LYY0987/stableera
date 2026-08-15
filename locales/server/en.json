@@ -2,6 +2,7 @@
   "system.jwtSecretMissing": "JWT_SECRET is not configured.",
   "system.demoReadonly": "This action isn't available in demo mode.",
   "system.internalError": "Internal server error.",
+  "common.rateLimited": "Too many requests. Please try again later.",
   "auth.failed": "Authentication failed.",
   "auth.forbidden": "You don't have permission to perform this action.",
   "album.nameRequired": "Album name is required.",
