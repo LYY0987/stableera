@@ -21,6 +21,8 @@
   "photos.actions.delete": "删除照片",
   "photos.actions.addToAlbum": "加入相册",
   "photos.actions.removeFromAlbum": "移出相册",
+  "photos.actions.setPrivate": "设为私密",
+  "photos.actions.setPublic": "设为公开",
   "photos.viewer.actions.previous": "上一张",
   "photos.viewer.actions.next": "下一张",
   "photos.viewer.actions.close": "返回",

@@ -11,6 +11,7 @@
   "photo.selectRequired": "Select at least one photo.",
   "photo.fileNameRequired": "File name is required.",
   "photo.favoriteRequired": "Select a favorite status.",
+  "photo.visibilityRequired": "Select a visibility.",
   "login.credentialsRequired": "Username and password are required.",
   "login.invalidCredentials": "Incorrect username or password.",
   "login.invalidCaptcha": "The captcha is incorrect or has expired.",

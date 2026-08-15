@@ -3,7 +3,7 @@ import { Context } from "hono";
 import result from '@/server/model/result';
 import { photoService } from '@/server/service/photo-service';
 import { getUserId } from "@/server/security/context";
-import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoTakenDateListBo } from '@/server/entity/bo/photo';
+import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoSetVisibilityBo, type PhotoTakenDateListBo } from '@/server/entity/bo/photo';
 
 // 这个模块注册照片相关接口。
 
@@ -52,6 +52,13 @@ app.post('/photo/recycle', async (c: Context) => {
 app.post('/photo/favorite', async (c: Context) => {
   const body = await c.req.json<PhotoFavoriteBo>();
   await photoService.favorite(body, getUserId());
+  return c.json(result.ok());
+})
+
+// 设置当前用户指定照片的可见性（公开/私密）。
+app.post('/photo/setVisibility', async (c: Context) => {
+  const body = await c.req.json<PhotoSetVisibilityBo>();
+  await photoService.setVisibility(body, getUserId());
   return c.json(result.ok());
 })
 

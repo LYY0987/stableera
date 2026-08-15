@@ -14,6 +14,7 @@ import { useImagePreload } from "@/hooks/use-image-preload"
 import { PhotoCard } from "@/components/photo/photo-card"
 import { PhotoSelectionDrawer } from "@/components/photo/photo-selection-drawer"
 import { type PhotoVo } from "@/server/entity/vo/photo"
+import { PhotoVisibilityEnum } from "@/server/enums/photo-enum"
 
 interface PhotoMasonryProps {
   photos: PhotoVo[]
@@ -23,6 +24,7 @@ interface PhotoMasonryProps {
   onPhotoFavorite?: (index: number, setFavorite: (favorite: boolean) => void) => void
   onPhotoDelete?: (photoIds: string[]) => void
   onPhotoRestore?: (photoIds: string[]) => void
+  onPhotoVisibility?: (photoIds: string[], visibility: number) => void
   onAlbumOpen?: (photoIds: string[]) => void
   onAlbumRemove?: (photoIds: string[]) => void
 }
@@ -83,6 +85,7 @@ const PhotoMasonry = memo(function PhotoMasonry({
   onPhotoFavorite,
   onPhotoDelete,
   onPhotoRestore,
+  onPhotoVisibility,
   onAlbumOpen,
   onAlbumRemove,
 }: PhotoMasonryProps) {
@@ -349,6 +352,18 @@ const PhotoMasonry = memo(function PhotoMasonry({
     onAlbumRemove?.(photoIds)
   }
 
+  // 批量切换选中本人照片的可见性：全部私密时改为公开，否则改为私密。
+  function toggleSelectedVisibility() {
+    const photoIds = ownedSelectedPhotoIds
+    const allPrivate = photoIds.length > 0 && photoIds.every((photoId) => (
+      photos.find((photo) => photo.photoId === photoId)?.visibility === PhotoVisibilityEnum.PRIVATE
+    ))
+    const target = allPrivate ? PhotoVisibilityEnum.PUBLIC : PhotoVisibilityEnum.PRIVATE
+
+    clearSelectedPhotos()
+    onPhotoVisibility?.(photoIds, target)
+  }
+
   return (
     <>
       <PhotoSelectionDrawer
@@ -357,6 +372,12 @@ const PhotoMasonry = memo(function PhotoMasonry({
         onDelete={ownedSelectedPhotoIds.length > 0 ? deleteSelectedPhotos : undefined}
         onSelectAll={selectFirstPhotos}
         onRestore={onPhotoRestore ? restoreSelectedPhotos : undefined}
+        visibilityTarget={onPhotoVisibility && ownedSelectedPhotoIds.length > 0
+          ? ownedSelectedPhotoIds.every((photoId) => photos.find((photo) => photo.photoId === photoId)?.visibility === PhotoVisibilityEnum.PRIVATE)
+            ? PhotoVisibilityEnum.PUBLIC
+            : PhotoVisibilityEnum.PRIVATE
+          : undefined}
+        onVisibilityToggle={onPhotoVisibility && ownedSelectedPhotoIds.length > 0 ? toggleSelectedVisibility : undefined}
         onAlbumOpen={onAlbumOpen && ownedSelectedPhotoIds.length > 0 ? openAlbumDialog : undefined}
         onAlbumRemove={onAlbumRemove && ownedSelectedPhotoIds.length > 0 ? removeAlbumPhotos : undefined}
       />

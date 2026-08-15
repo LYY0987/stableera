@@ -234,6 +234,18 @@ export function PhotoCard({
             <h3 className={["mb-1 truncate text-sm font-medium opacity-0 group-hover:opacity-100", showHover ? "opacity-100" : ""].join(" ")}>
               {formatPhotoName(data.name)}
             </h3>
+            {data.uploader && (
+              <div className={["mb-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100", showHover ? "opacity-100" : ""].join(" ")}>
+                {data.uploader.avatar && (
+                  <img
+                    src={data.uploader.avatar}
+                    alt=""
+                    className="size-4 shrink-0 rounded-full object-cover"
+                  />
+                )}
+                <span className="truncate text-xs text-white/85">{data.uploader.username}</span>
+              </div>
+            )}
             <div className="mb-1 flex justify-start">
               <span className={["text-xs text-white/85 opacity-0 group-hover:opacity-100", showHover ? "opacity-100" : ""].join(" ")}>
                 {formatPhotoTakenDate(data.takenTime, locale)}
