@@ -18,6 +18,8 @@ interface PhotoListBo {
   status?: number | null;
   albumId?: string | null;
   keyword?: string | null;
+  // 按可见性筛选：0 公开 / 1 私密（私密筛选仅返回当前用户自己的照片）。
+  visibility?: number | null;
 
 }
 
