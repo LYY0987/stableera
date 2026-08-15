@@ -374,7 +374,6 @@ const PhotoMasonry = memo(function PhotoMasonry({
               {...props}
               selected={visibleSelectedPhotoIds.includes(props.data.photoId)}
               selectionActive={visibleSelectedPhotoIds.length > 0}
-              isOwner={props.data.userId === currentUserId}
               onOpen={() => onPhotoOpen?.(props.index)}
               onFavoriteChange={onPhotoFavorite}
               onSelectedChange={changePhotoSelected}

@@ -8,6 +8,7 @@ import { photoTab } from '@/server/entity/photo';
 import { settingTab } from '@/server/entity/setting';
 import { storageTab } from '@/server/entity/storage';
 import { userTab } from '@/server/entity/user';
+import { userFavoriteTab } from '@/server/entity/user-favorite';
 
 // 这个模块统一导出 Drizzle 数据库表结构。
 
@@ -21,6 +22,7 @@ const schema = {
   photoTab,
   settingTab,
   storageTab,
+  userFavoriteTab,
   userTab
 };
 
