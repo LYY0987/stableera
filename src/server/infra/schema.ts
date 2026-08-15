@@ -6,6 +6,7 @@ import { cacheTab } from '@/server/entity/cache';
 import { exifTab } from '@/server/entity/exif';
 import { fileTab } from '@/server/entity/file';
 import { photoTab } from '@/server/entity/photo';
+import { photoTagTab } from '@/server/entity/photo-tag';
 import { settingTab } from '@/server/entity/setting';
 import { storageTab } from '@/server/entity/storage';
 import { userTab } from '@/server/entity/user';
@@ -22,6 +23,7 @@ const schema = {
   exifTab,
   fileTab,
   photoTab,
+  photoTagTab,
   settingTab,
   storageTab,
   userFavoriteTab,

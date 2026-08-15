@@ -3,7 +3,7 @@ import { Context } from "hono";
 import result from '@/server/model/result';
 import { photoService } from '@/server/service/photo-service';
 import { getUserId } from "@/server/security/context";
-import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoSetVisibilityBo, type PhotoTakenDateListBo } from '@/server/entity/bo/photo';
+import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoSetTagsBo, type PhotoSetVisibilityBo, type PhotoTakenDateListBo } from '@/server/entity/bo/photo';
 
 // 这个模块注册照片相关接口。
 
@@ -60,6 +60,19 @@ app.post('/photo/setVisibility', async (c: Context) => {
   const body = await c.req.json<PhotoSetVisibilityBo>();
   await photoService.setVisibility(body, getUserId());
   return c.json(result.ok());
+})
+
+// 整体替换当前用户指定照片的标签。
+app.post('/photo/setTags', async (c: Context) => {
+  const body = await c.req.json<PhotoSetTagsBo>();
+  await photoService.setTags(body, getUserId());
+  return c.json(result.ok());
+})
+
+// 统计全部标签及照片数量。
+app.post('/photo/tags', async (c: Context) => {
+  const data = await photoService.listTags();
+  return c.json(result.ok(data));
 })
 
 // 恢复当前用户回收站中的指定照片。
