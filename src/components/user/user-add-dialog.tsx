@@ -70,12 +70,19 @@ export function UserAddDialog({ title, open, user, onOpenChange, onUserConfirm }
     }
   }, [])
 
-  useEffect(() => {
+  // syncKey 标记弹框打开状态与目标用户，变化时在渲染期重置表单。
+  const syncKey = open ? `open:${user?.userId ?? ""}` : "closed"
+  const [prevSyncKey, setPrevSyncKey] = useState(syncKey)
+
+  // 弹框打开时按目标用户初始化表单并清空校验错误。
+  if (prevSyncKey !== syncKey) {
+    setPrevSyncKey(syncKey)
+
     if (open) {
       setForm(createUserForm(user))
       setErrors({})
     }
-  }, [open, user])
+  }
 
   // 更新文本输入字段。
   function updateField(field: "username" | "password", value: string) {

@@ -21,6 +21,8 @@
   "photos.actions.delete": "Delete photos",
   "photos.actions.addToAlbum": "Add to album",
   "photos.actions.removeFromAlbum": "Remove from album",
+  "photos.actions.setPrivate": "Set private",
+  "photos.actions.setPublic": "Set public",
   "photos.viewer.actions.previous": "Previous photo",
   "photos.viewer.actions.next": "Next photo",
   "photos.viewer.actions.close": "Back",

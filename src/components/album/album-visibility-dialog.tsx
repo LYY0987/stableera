@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Dialog } from "@/components/common/dialog"
@@ -30,10 +30,15 @@ export function AlbumVisibilityDialog({
   const t = useTranslations("albums")
   // inputVisibility 保存弹框中选择的可见性。
   const [inputVisibility, setInputVisibility] = useState(String(visibility))
+  // prevSyncKey 记录上一次的打开状态与可见性，变化时在渲染期同步选项。
+  const [prevSyncKey, setPrevSyncKey] = useState(`${open}:${visibility}`)
+  const syncKey = `${open}:${visibility}`
 
-  useEffect(() => {
+  // 弹框打开或目标可见性变化时同步选择，保证每次打开都展示当前可见性。
+  if (prevSyncKey !== syncKey) {
+    setPrevSyncKey(syncKey)
     setInputVisibility(String(visibility))
-  }, [visibility, open])
+  }
 
   // 提交修改的可见性。
   function submitVisibility() {

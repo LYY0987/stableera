@@ -1,5 +1,6 @@
 'use client';
 
+import { useIsBrowser } from "@/hooks/use-is-browser"
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { PhotoMasonry } from "@/components/photo/photo-masonry"
 import { useRouter } from "next/navigation"
@@ -37,7 +38,7 @@ export default function Page() {
   const { initialPhotos } = useTrashPhotoContext()
   const { sidebarOpen, setSidebarOpen } = useApp()
   // isBrowser 标记当前是否在浏览器环境，SSR 阶段显示骨架屏。
-  const [isBrowser, setIsBrowser] = useState(false)
+  const isBrowser = useIsBrowser()
   // deleteOpen 控制彻底删除确认弹框的打开状态。
   const [deleteOpen, setDeleteOpen] = useState(false)
   // deletingPhotoIds 保存当前等待彻底删除确认的照片 id。
@@ -54,10 +55,6 @@ export default function Page() {
   } = usePhotoList({ status: PhotoStatusEnum.DELETE }, PHOTO_LIST_PAGE_SIZE, initialPhotos)
 
   useLayoutEffect(() => {
-    setIsBrowser(true)
-  }, [])
-
-  useEffect(() => {
     // 刷新回收站照片页时禁用浏览器滚动恢复，并回到照片列表顶部。
     const previousScrollRestoration = window.history.scrollRestoration
 

@@ -44,6 +44,12 @@ interface PhotoDeleteBo {
   photoIds: string[];
 }
 
+interface PhotoSetVisibilityBo {
+  photoIds: string[];
+  // 0 公开 / 1 私密。
+  visibility: number;
+}
+
 interface PhotoCreateUrlBo {
   // 前端传入的原始文件名。
   fileName: string;
@@ -53,5 +59,5 @@ interface PhotoCreateUrlBo {
   contentType?: string;
 }
 
-export type { PhotoCreateUrlBo, PhotoDeleteBo, PhotoExistsBo, PhotoFavoriteBo, PhotoListBo, PhotoRecycleBo, PhotoRestoreBo, PhotoTakenDateListBo };
+export type { PhotoCreateUrlBo, PhotoDeleteBo, PhotoExistsBo, PhotoFavoriteBo, PhotoListBo, PhotoRecycleBo, PhotoRestoreBo, PhotoSetVisibilityBo, PhotoTakenDateListBo };
 

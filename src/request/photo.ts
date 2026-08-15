@@ -1,5 +1,5 @@
 import { http } from "@/request/request";
-import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoTakenDateListBo } from "@/server/entity/bo/photo";
+import { type PhotoCreateUrlBo, type PhotoDeleteBo, type PhotoExistsBo, type PhotoFavoriteBo, type PhotoListBo, type PhotoRecycleBo, type PhotoRestoreBo, type PhotoSetVisibilityBo, type PhotoTakenDateListBo } from "@/server/entity/bo/photo";
 import { type PageVo } from "@/server/entity/vo/common";
 import { type PhotoAddResultVo, type PhotoCreateUrlVo, type PhotoExistsVo, type PhotoTakenDateVo, type PhotoVo } from "@/server/entity/vo/photo";
 // 这个模块封装照片相关接口请求。
@@ -37,6 +37,11 @@ export function photoRecycle(params: PhotoRecycleBo) {
 // 设置照片收藏状态。
 export function photoFavorite(params: PhotoFavoriteBo) {
   return http.post<void>('/photo/favorite', params);
+}
+
+// 设置照片可见性（公开/私密）。
+export function photoSetVisibility(params: PhotoSetVisibilityBo) {
+  return http.post<void>('/photo/setVisibility', params);
 }
 
 // 恢复回收站照片。

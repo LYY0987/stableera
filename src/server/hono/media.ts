@@ -8,7 +8,7 @@ import { albumPhotoTab } from '@/server/entity/album-photo';
 import { albumTab } from '@/server/entity/album';
 import { eq, and } from 'drizzle-orm';
 import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
-import { PhotoStatusEnum } from '@/server/enums/photo-enum';
+import { PhotoStatusEnum, PhotoVisibilityEnum } from '@/server/enums/photo-enum';
 import { contextStorage } from 'hono/context-storage';
 import { security } from '../security/security';
 import { getUserId } from '@/server/security/context';
@@ -52,7 +52,8 @@ async function getPhotoFile(key: string) {
       photoId: photoTab.photoId,
       storageId: photoTab.storageId,
       ownerUserId: photoTab.userId,
-      status: photoTab.status
+      status: photoTab.status,
+      visibility: photoTab.visibility
     })
     .from(fileTab)
     .innerJoin(photoTab, eq(fileTab.photoId, photoTab.photoId))
@@ -63,7 +64,7 @@ async function getPhotoFile(key: string) {
     return null;
   }
 
-  // 照片所有者始终可读取自己的媒体；其他用户只能读取未删除、未加入任何私密相册的公开照片。
+  // 照片所有者始终可读取自己的媒体；其他用户只能读取未删除、公开且未加入私密相册的照片。
   if (row.ownerUserId !== userId) {
     const [privatePhoto] = await orm
       .select({
@@ -77,7 +78,7 @@ async function getPhotoFile(key: string) {
       ))
       .limit(1);
 
-    if (row.status !== PhotoStatusEnum.NORMAL || privatePhoto) {
+    if (row.status !== PhotoStatusEnum.NORMAL || row.visibility !== PhotoVisibilityEnum.PUBLIC || privatePhoto) {
       return null;
     }
   }

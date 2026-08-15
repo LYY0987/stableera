@@ -14,11 +14,12 @@ import {
   type PhotoListBo,
   type PhotoRecycleBo,
   type PhotoRestoreBo,
+  type PhotoSetVisibilityBo,
   type PhotoTakenDateListBo,
 } from '@/server/entity/bo/photo';
 import { PHOTO_LIST_PAGE_SIZE } from '@/server/const/global';
 import { AlbumVisibilityEnum } from '@/server/enums/album-enum';
-import { PhotoFavoriteEnum, PhotoStatusEnum } from '@/server/enums/photo-enum';
+import { PhotoFavoriteEnum, PhotoStatusEnum, PhotoVisibilityEnum } from '@/server/enums/photo-enum';
 import { StorageTypeOptions } from '@/server/enums/storage-enum';
 import { type PageVo } from '@/server/entity/vo/common';
 import { type PhotoAddResultVo, type PhotoCreateUrlVo, type PhotoExistsVo, type PhotoTakenDateVo, type PhotoVo } from '@/server/entity/vo/photo';
@@ -38,6 +39,7 @@ import { exifService } from '@/server/service/exif-service';
 import { buildPhotoKey, buildPreviewKey, buildThumbnailKey } from '@/server/lib/photo-path';
 import { type File as PhotoFile, fileTab } from '@/server/entity/file';
 import { userFavoriteTab } from '@/server/entity/user-favorite';
+import { userTab } from '@/server/entity/user';
 import { fileService } from '@/server/service/file-service';
 import { FileTypeEnum } from '@/server/enums/file-enum';
 
@@ -109,9 +111,15 @@ const photoService = {
         .from(photoTab)
         .where(and(
           ...whereList,
-          // 照片墙展示所有用户的公开照片：状态为正常且未指定相册时，隐藏任意用户私密相册中的照片。
+          // 照片墙展示：自己的照片（含私密）+ 其他用户的公开照片（排除任意私密相册中的照片）。
           status === PhotoStatusEnum.NORMAL
-            ? notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery())
+            ? or(
+                eq(photoTab.userId, userId),
+                and(
+                  eq(photoTab.visibility, PhotoVisibilityEnum.PUBLIC),
+                  notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery())
+                )
+              )
             : sql`1=1`
         ))
         .orderBy(desc(orderColumn), desc(photoTab.photoId))
@@ -119,10 +127,11 @@ const photoService = {
 
     const fileStorageList = await storageService.getStorageList();
     const photoIds = list.map((photo) => photo.photoId);
-    const [exifMap, fileMap, favoritePhotoIds] = await Promise.all([
+    const [exifMap, fileMap, favoritePhotoIds, uploaderMap] = await Promise.all([
       exifService.listByPhotoIds(photoIds),
       fileService.listByPhotoIds(photoIds),
       this.listUserFavoritePhotoIds(photoIds, userId),
+      this.listUploaders(list.map((photo) => photo.userId)),
     ]);
 
     const result = list.map((photo) => {
@@ -132,6 +141,8 @@ const photoService = {
 
       // 收藏状态按当前用户覆盖，photo 表的 favorite 列仅作历史兼容。
       vo.favorite = favoritePhotoIds.has(photo.photoId) ? PhotoFavoriteEnum.YES : PhotoFavoriteEnum.NO;
+      // 上传者信息用于照片墙作者标识。
+      vo.uploader = uploaderMap.get(photo.userId) ?? null;
 
       return vo;
     });
@@ -181,8 +192,14 @@ const photoService = {
         .from(photoTab)
         .where(and(
           ...whereList,
-          // 照片墙日期统计展示所有用户的公开照片，隐藏任意用户私密相册中的照片。
-          notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery())
+          // 日期统计与照片墙一致：自己的照片（含私密）+ 其他用户的公开照片（排除私密相册）。
+          or(
+            eq(photoTab.userId, userId),
+            and(
+              eq(photoTab.visibility, PhotoVisibilityEnum.PUBLIC),
+              notInArray(photoTab.photoId, this.buildPrivateAlbumPhotoIdQuery())
+            )
+          )
         ))
         .groupBy(takenDate)
         .orderBy(asc(takenDate));
@@ -225,6 +242,46 @@ const photoService = {
       ));
 
     return new Set(rows.map((row) => row.photoId));
+  },
+
+  // 查询照片上传者的基础信息，返回 userId 到信息的映射，用于照片墙作者标识。
+  async listUploaders(userIds: string[]): Promise<Map<string, { userId: string; username: string; avatar: string }>> {
+    const uniqueIds = Array.from(new Set(userIds));
+
+    if (!uniqueIds.length) {
+      return new Map();
+    }
+
+    const rows = await orm
+      .select({
+        userId: userTab.userId,
+        username: userTab.username,
+        avatar: userTab.avatar
+      })
+      .from(userTab)
+      .where(inArray(userTab.userId, uniqueIds));
+
+    return new Map(rows.map((row) => [row.userId, row]));
+  },
+
+  // 设置当前用户指定照片的可见性（公开/私密），仅照片所有者可操作。
+  async setVisibility(params: PhotoSetVisibilityBo, userId: string): Promise<void> {
+    if (!params.photoIds?.length) {
+      throw new BizError('photo.selectRequired');
+    }
+
+    if (params.visibility !== PhotoVisibilityEnum.PUBLIC && params.visibility !== PhotoVisibilityEnum.PRIVATE) {
+      throw new BizError('photo.visibilityRequired');
+    }
+
+    await orm.update(photoTab)
+      .set({
+        visibility: params.visibility
+      })
+      .where(and(
+        eq(photoTab.userId, userId),
+        inArray(photoTab.photoId, params.photoIds)
+      ));
   },
 
   // 根据原文件名生成存储 key，若 key 已存在则在扩展名前追加时间戳。
@@ -661,7 +718,9 @@ const photoService = {
       storageName: fileStorage?.name ?? null,
       storageTypeDesc: fileStorage
         ? StorageTypeOptions.find((item) => item.value === fileStorage.type)?.label ?? null
-        : null
+        : null,
+      // 上传者信息由列表查询按需填充，其余场景默认为空。
+      uploader: null
     };
   },
 

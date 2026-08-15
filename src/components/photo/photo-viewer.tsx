@@ -360,10 +360,6 @@ function FullscreenButton({
 }) {
   const t = useTranslations("photos.viewer.actions")
 
-  if (fullscreen) {
-    return null
-  }
-
   // 进入全屏状态后隐藏查看器操作按钮。
   function openFullscreen() {
     enter()
@@ -371,6 +367,10 @@ function FullscreenButton({
   }
 
   const tap = useTapAction(openFullscreen)
+
+  if (fullscreen) {
+    return null
+  }
 
   return (
     <Tooltip>

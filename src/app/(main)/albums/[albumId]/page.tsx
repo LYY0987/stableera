@@ -18,11 +18,12 @@ import {
 } from "@/components/ui/sidebar"
 import { usePhotoList } from "@/hooks/use-photo-list"
 
+import { useIsBrowser } from "@/hooks/use-is-browser"
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { PhotoMasonry } from "@/components/photo/photo-masonry"
 import { PHOTO_LIST_PAGE_SIZE } from "@/server/const/global"
 import { PhotoFavoriteEnum } from "@/server/enums/photo-enum"
-import { photoFavorite, photoRecycle } from "@/request/photo"
+import { photoFavorite, photoRecycle, photoSetVisibility } from "@/request/photo"
 import { albumAddPhoto, albumRemovePhoto } from "@/request/album"
 import { useAlbumStore } from "@/store/album-store"
 import { usePhotoStore } from "@/store/photo-store"
@@ -53,7 +54,7 @@ export default function Page() {
   const currentAlbumName = useAlbumStore((state) => state.currentAlbumName)
   const albumIdRef = useRef(albumId)
   // isBrowser 标记当前是否在浏览器环境，SSR 阶段显示骨架屏。
-  const [isBrowser, setIsBrowser] = useState(false)
+  const isBrowser = useIsBrowser()
   const {
     photos,
     masonryKey,
@@ -72,10 +73,6 @@ export default function Page() {
   const uploadedPhotos = usePhotoStore((state) => state.uploadedPhotos)
 
   useLayoutEffect(() => {
-    setIsBrowser(true)
-  }, [])
-
-  useEffect(() => {
     // 刷新相册照片页时禁用浏览器滚动恢复，并回到照片列表顶部。
     const previousScrollRestoration = window.history.scrollRestoration
 
@@ -140,6 +137,17 @@ export default function Page() {
       removePhotos(photoIds)
     })
   }, [removePhotos])
+
+  // 批量设置选中照片的可见性，并同步本地状态。
+  const changePhotoVisibility = useCallback((photoIds: string[], visibility: number) => {
+    photoSetVisibility({ photoIds, visibility }).then(() => {
+      photos.forEach((photo) => {
+        if (photoIds.includes(photo.photoId)) {
+          photo.visibility = visibility
+        }
+      })
+    })
+  }, [photos])
 
   // 批量把当前相册选中的照片移出相册。
   const removeAlbumPhotos = useCallback((photoIds: string[]) => {
@@ -240,6 +248,7 @@ export default function Page() {
                 onPhotoOpen={openPhoto}
                 onPhotoFavorite={changePhotoFavorite}
                 onPhotoDelete={recyclePhotos}
+                onPhotoVisibility={changePhotoVisibility}
                 onAlbumOpen={openAlbumDialog}
                 onAlbumRemove={removeAlbumPhotos}
               />
