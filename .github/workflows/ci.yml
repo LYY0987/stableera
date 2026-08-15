@@ -33,7 +33,8 @@ jobs:
         run: pnpm lint
 
       - name: Type check
-        run: pnpm exec tsc --noEmit
+        # next-env.d.ts 被 git 忽略，干净检出后需先生成类型声明（含图片模块声明）。
+        run: pnpm exec next typegen && pnpm exec tsc --noEmit
 
       - name: Test
         run: pnpm test
